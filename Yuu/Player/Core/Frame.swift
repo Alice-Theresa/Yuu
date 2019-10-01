@@ -23,26 +23,13 @@ class AudioFrame: Frame {
     var position: TimeInterval
     var duration: TimeInterval
     
-    var samples: UnsafeMutableRawPointer?
-    var length: Int = 0
+    var samples: Data
     var outputOffset: Int = 0
-    var bufferSize: Int = 0
-    
-    deinit {
-        free(samples)
-    }
-    
-    init(position: TimeInterval, duration: TimeInterval, samplesLength: Int) {
+
+    init(position: TimeInterval, duration: TimeInterval, samples: Data) {
         self.position = position
         self.duration = duration
-        if bufferSize < samplesLength {
-            if (bufferSize > 0 && samples != nil) {
-                free(samples)
-            }
-            bufferSize = samplesLength
-            samples = malloc(bufferSize)
-        }
-        length = samplesLength
+        self.samples = samples
     }
 
 }

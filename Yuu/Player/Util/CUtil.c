@@ -43,19 +43,3 @@ void YuuDidDecompress(void *decompressionOutputRefCon,
     CVPixelBufferRef *outputPixelBuffer = (CVPixelBufferRef *)sourceFrameRefCon;
     *outputPixelBuffer = CVPixelBufferRetain(pixelBuffer);
 }
-
-void YuuAudioAccelerateCompute(float *player, UInt32 inNumberFrames, AudioBufferList *ioData) {
-    float scale = (float)INT16_MAX;
-    vDSP_vsmul(player, 1, &scale, player, 1, inNumberFrames * 2);
-    
-    for (int iBuffer = 0; iBuffer < ioData->mNumberBuffers; iBuffer++) {
-        int thisNumChannels = ioData->mBuffers[iBuffer].mNumberChannels;
-        for (int iChannel = 0; iChannel < thisNumChannels; iChannel++) {
-            vDSP_vfix16(player + iChannel,
-                        2,
-                        (SInt16 *)ioData->mBuffers[iBuffer].mData + iChannel,
-                        thisNumChannels,
-                        inNumberFrames);
-        }
-    }
-}

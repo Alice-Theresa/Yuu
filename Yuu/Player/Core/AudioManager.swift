@@ -11,12 +11,12 @@ import AVFoundation
 import Accelerate
 
 protocol AudioManagerDelegate: NSObjectProtocol {
-    func fetch(outputData: UnsafeMutablePointer<Float>, numberOfFrames: UInt32, numberOfChannels: UInt32)
+    func fetch(outputData: UnsafeMutablePointer<Int16>, numberOfFrames: UInt32, numberOfChannels: UInt32)
 }
 
 class AudioManager {
     weak var delegate: AudioManagerDelegate?
-    var outData = UnsafeMutablePointer<Float>.allocate(capacity: 4096 * 2)
+    var outData = UnsafeMutablePointer<Int16>.allocate(capacity: 4096 * 2)
     
     var audioUnit: AudioUnit!
     let audioSession = AVAudioSession.sharedInstance()
@@ -30,13 +30,12 @@ class AudioManager {
         ioData: UnsafeMutablePointer<AudioBufferList>?) -> OSStatus in
         
         if let ioData = ioData {
-            for iBuffer in 0..<Int(ioData.pointee.mNumberBuffers) {
-                memset(ioData[iBuffer].mBuffers.mData, 0, Int(ioData[iBuffer].mBuffers.mDataByteSize))
-            }
             let player = Unmanaged<AudioManager>.fromOpaque(inRefCon).takeUnretainedValue()
             if let delegate = player.delegate {
                 delegate.fetch(outputData: player.outData, numberOfFrames: inNumberFrames, numberOfChannels: 2)
-                YuuAudioAccelerateCompute(player.outData, inNumberFrames, ioData)
+                for iBuffer in 0..<Int(ioData.pointee.mNumberBuffers) {
+                    memcpy(ioData[iBuffer].mBuffers.mData, player.outData, Int(ioData[iBuffer].mBuffers.mDataByteSize))
+                }
                 return noErr
             }
         }

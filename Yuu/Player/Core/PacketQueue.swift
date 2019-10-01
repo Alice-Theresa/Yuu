@@ -19,7 +19,7 @@ fileprivate class PacketNode {
 
 class PacketQueue {
     
-    let semaphore = DispatchSemaphore(value: 1)
+    private let semaphore = DispatchSemaphore(value: 1)
     
     var packetTotalSize = 0
     

@@ -20,7 +20,7 @@ fileprivate class FrameNode {
 
 class FrameQueue {
     
-    let semaphore = DispatchSemaphore(value: 1)
+    private let semaphore = DispatchSemaphore(value: 1)
     
     private(set) var count = 0
     

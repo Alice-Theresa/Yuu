@@ -110,24 +110,14 @@ class AudioDecoder {
             
         }
         let numberOfElements = numberOfFrames * channelCount
-        let length = Int(numberOfElements) * MemoryLayout<Float>.size
+        let length = Int(numberOfElements) * MemoryLayout<Int16>.size
+        
         let position = TimeInterval(av_frame_get_best_effort_timestamp(temp.cFramePtr)) * TimeInterval(context!.audioTimebase)
         let duration = TimeInterval(av_frame_get_pkt_duration(temp.cFramePtr)) * TimeInterval(context!.audioTimebase)
-        let audioFrame = AudioFrame(position: position, duration: duration, samplesLength: length)
         
-        var scale = 1.0 / Float(Int16.max)
-        let sample = audioFrame.samples!
-        vDSP_vflt16(audioDataBuffer!.assumingMemoryBound(to: Int16.self),
-                    1,
-                    sample.assumingMemoryBound(to: Float.self),
-                    1,
-                    vDSP_Length(numberOfElements))
-        vDSP_vsmul(sample.assumingMemoryBound(to: Float.self),
-                   1,
-                   &scale,
-                   sample.assumingMemoryBound(to: Float.self),
-                   1,
-                   vDSP_Length(numberOfElements))
+        let samples = Data(bytes: audioDataBuffer!, count: length)
+        let audioFrame = AudioFrame(position: position, duration: duration, samples: samples)
+        
         return audioFrame
     }
 

@@ -28,6 +28,4 @@ void YuuDidDecompress(void *decompressionOutputRefCon,
                       CMTime presentationTimeStamp,
                       CMTime presentationDuration);
 
-void YuuAudioAccelerateCompute(float *player, UInt32 inNumberFrames, AudioBufferList *ioData);
-
 #endif /* CUtil_h */

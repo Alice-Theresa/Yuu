@@ -251,20 +251,21 @@ extension Controller: MTKViewDelegate {
 }
 
 extension Controller: AudioManagerDelegate {
-    func fetch(outputData: UnsafeMutablePointer<Float>, numberOfFrames: UInt32, numberOfChannels: UInt32) {
+    func fetch(outputData: UnsafeMutablePointer<Int16>, numberOfFrames: UInt32, numberOfChannels: UInt32) {
         var nof = numberOfFrames
         var od = outputData
         while nof > 0 {
             if let frame = audioFrame {
                 if (self.audioSeekingTime > 0) {
-                    memset(od, 0, Int(nof * numberOfChannels) * MemoryLayout<Float>.size);
+                    memset(od, 0, Int(nof * numberOfChannels) * MemoryLayout<Int16>.size);
                     self.audioFrame = nil
                     return
                 }
                 syncer.updateAudioClock(position: frame.position)
-                let bytes: UnsafeMutablePointer<UInt8> = frame.samples!.assumingMemoryBound(to: UInt8.self) + frame.outputOffset
-                let bytesLeft = frame.length - frame.outputOffset
-                let frameSizeOf = Int(numberOfChannels) * MemoryLayout<Float>.size
+                let nsData = frame.samples as NSData
+                let bytes: UnsafePointer<UInt8> = nsData.bytes.assumingMemoryBound(to: UInt8.self).advanced(by: frame.outputOffset)
+                let bytesLeft = frame.samples.count - frame.outputOffset
+                let frameSizeOf = Int(numberOfChannels) * MemoryLayout<Int16>.size
                 let  bytesToCopy = min(Int(nof) * frameSizeOf, bytesLeft)
                 let  framesToCopy = bytesToCopy / frameSizeOf
                 memcpy(od, bytes, bytesToCopy)
@@ -278,14 +279,14 @@ extension Controller: AudioManagerDelegate {
                 }
             } else if let frame = audioFrameQueue.dequeue() {
                 if frame is MarkerFrame {
-                    memset(od, 0, Int(nof * numberOfChannels) * MemoryLayout<Float>.size);
+                    memset(od, 0, Int(nof * numberOfChannels) * MemoryLayout<Int16>.size);
                     audioSeekingTime = -Double.greatestFiniteMagnitude
                     self.audioFrame = nil
                 } else {
                     self.audioFrame = frame as? AudioFrame
                 }
             } else {
-                memset(od, 0, Int(nof * numberOfChannels) * MemoryLayout<Float>.size)
+                memset(od, 0, Int(nof * numberOfChannels) * MemoryLayout<Int16>.size)
             }
         }
     }
