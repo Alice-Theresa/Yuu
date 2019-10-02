@@ -8,7 +8,7 @@
 
 import Foundation
 
-final class YuuFrame {
+class YuuFrame {
     
     let cFramePtr: UnsafeMutablePointer<AVFrame>
     var cFrame: AVFrame { return cFramePtr.pointee }

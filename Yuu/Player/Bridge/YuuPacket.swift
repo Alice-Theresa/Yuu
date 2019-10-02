@@ -59,12 +59,12 @@ class YuuPacket {
         set { cPacketPtr.pointee.flags = newValue.rawValue }
     }
     
-    var duration: Int64 {
+    var dur: Int64 {
         get { return cPacket.duration }
         set { cPacketPtr.pointee.duration = newValue }
     }
     
-    var position: Int64 {
+    var pos: Int64 {
         get { return cPacket.pos }
         set { cPacketPtr.pointee.pos = newValue }
     }

@@ -12,7 +12,7 @@ import VideoToolbox
 protocol VideoDecoder {
     var context: FormatContext? { get }
     
-    func decode(packet: YuuPacket) -> Array<Frame>
+    func decode(packet: Packet) -> Array<FlowData>
 }
 
 class VTDecoder: VideoDecoder {
@@ -62,7 +62,7 @@ class VTDecoder: VideoDecoder {
         print(status)
     }
     
-    func decode(packet: YuuPacket) -> Array<Frame> {
+    func decode(packet: Packet) -> Array<FlowData> {
         var outputPixelBuffer: CVPixelBuffer?
         var blockBuffer: CMBlockBuffer?
         var status = CMBlockBufferCreateWithMemoryBlock(allocator: kCFAllocatorDefault,
@@ -101,7 +101,7 @@ class VTDecoder: VideoDecoder {
                     }
                     if let outputPixelBuffer = outputPixelBuffer, let context = context {
                         let videoFrame = NV12VideoFrame(position: Double(packet.pts) * context.videoTimebase,
-                                                        duration: Double(packet.duration) * context.videoTimebase,
+                                                        duration: Double(packet.dur) * context.videoTimebase,
                                                         pixelBuffer: outputPixelBuffer)
                         packet.unref()
                         return [videoFrame]
@@ -154,9 +154,9 @@ class FFDecoder: VideoDecoder {
         tempFrame = YuuFrame()
     }
     
-    func decode(packet: YuuPacket) -> Array<Frame> {
-        let defaultArray: [Frame] = []
-        var array: [Frame] = []
+    func decode(packet: Packet) -> Array<FlowData> {
+        let defaultArray: [FlowData] = []
+        var array: [FlowData] = []
         guard let _ = packet.data, let context = context, let vcc = context.videoCodecContext else { return defaultArray }
         do {
             try vcc.sendPacket(packet)

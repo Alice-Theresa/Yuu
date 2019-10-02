@@ -15,9 +15,9 @@ protocol ControllerProtocol: NSObjectProtocol {
 
 enum ControlState: Int {
     case Origin = 0
-    case Opened
     case Playing
     case Paused
+    case Stopped
     case Closed
 }
 
@@ -30,10 +30,10 @@ class Controller: NSObject {
     private var videoDecoder: VideoDecoder?
     private var audioDecoder: AudioDecoder?
     
-    private let videoFrameQueue = FrameQueue()
-    private let audioFrameQueue = FrameQueue()
-    private let videoPacketQueue = PacketQueue()
-    private let audioPacketQueue = PacketQueue()
+    private let videoFrameQueue = ObjectQueue()
+    private let audioFrameQueue = ObjectQueue()
+    private let videoPacketQueue = ObjectQueue()
+    private let audioPacketQueue = ObjectQueue()
     
     private let readPacketOperation = BlockOperation()
     private let videoDecodeOperation = BlockOperation()
@@ -50,7 +50,7 @@ class Controller: NSObject {
     private var videoSeekingTime: TimeInterval = -Double.greatestFiniteMagnitude
     private var audioSeekingTime: TimeInterval = -Double.greatestFiniteMagnitude
     private var syncer = Synchronizer()
-    private var videoFrame: Frame?
+    private var videoFrame: FlowData?
     private var audioFrame: AudioFrame?
     private var audioManager = AudioManager()
     
@@ -145,28 +145,28 @@ class Controller: NSObject {
                 Thread.sleep(forTimeInterval: 0.03)
                 continue
             }
-            if videoPacketQueue.packetTotalSize + Int(audioPacketQueue.packetTotalSize) > 10 * 1024 * 1024 {
+            if videoPacketQueue.count > 10 * 1024 {
                 Thread.sleep(forTimeInterval: 0.03)
                 continue
             }
             if isSeeking {
                 context.seeking(time: videoSeekingTime)
                 flushQueue()
-                videoPacketQueue.enqueueDiscardPacket()
-                audioPacketQueue.enqueueDiscardPacket()
+//                videoPacketQueue.enqueueDiscardPacket()
+//                audioPacketQueue.enqueueDiscardPacket()
                 isSeeking = false
                 continue
             }
-            let packet = YuuPacket()
+            let packet = Packet()
             let result = context.read(packet: packet)
             if result < 0 {
                 finished = true
                 break
             } else {
                 if packet.streamIndex == context.videoIndex {
-                    videoPacketQueue.enqueue(packet: packet)
+                    videoPacketQueue.enqueue([packet])
                 } else if packet.streamIndex == context.audioIndex {
-                    audioPacketQueue.enqueue(packet: packet)
+                    audioPacketQueue.enqueue([packet])
                 }
             }
         }
@@ -182,17 +182,17 @@ class Controller: NSObject {
                 Thread.sleep(forTimeInterval: 0.03)
                 continue
             }
-            let packet = videoPacketQueue.dequeue()
+            guard let packet = videoPacketQueue.dequeue() as? Packet else { continue }
             if packet.flags == .discard {
                 avcodec_flush_buffers(context.videoCodecContext?.cContextPtr)
                 videoFrameQueue.flush()
-                videoFrameQueue.enqueueAndSort(frames: [MarkerFrame.init()])
+                videoFrameQueue.enqueue([MarkerFrame.init()])
                 packet.unref()
                 continue
             }
             if let vd = videoDecoder, packet.data != nil && packet.streamIndex >= 0 {
                 let frames = vd.decode(packet: packet)
-                videoFrameQueue.enqueueAndSort(frames: frames)
+                videoFrameQueue.enqueue(frames)
             }
         }
     }
@@ -207,17 +207,17 @@ class Controller: NSObject {
                 Thread.sleep(forTimeInterval: 0.03)
                 continue
             }
-            let packet = audioPacketQueue.dequeue()
+            guard let packet = audioPacketQueue.dequeue() as? Packet else { continue }
             if packet.flags == .discard {
                 avcodec_flush_buffers(context.audioCodecContext?.cContextPtr)
                 audioFrameQueue.flush()
-                audioFrameQueue.enqueueAndSort(frames: [MarkerFrame.init()])
+                audioFrameQueue.enqueue([MarkerFrame.init()])
                 packet.unref()
                 continue;
             }
             if let ad = audioDecoder, packet.data != nil && packet.streamIndex >= 0 {
                 let frames = ad.decode(packet: packet)
-                audioFrameQueue.enqueueAndSort(frames: frames)
+                audioFrameQueue.enqueue(frames)
             }
         }
     }
@@ -243,7 +243,7 @@ extension Controller: MTKViewDelegate {
             delegate?.controlCenter(controller: self, didRender: playFrame.position, duration: context.duration)
             videoFrame = nil
         } else {
-            videoFrame = videoFrameQueue.dequeue()
+            videoFrame = videoFrameQueue.dequeue() as? FlowData
         }
     }
     

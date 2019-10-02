@@ -1,25 +1,39 @@
 //
-//  Frame.swift
+//  Data.swift
 //  Yuu
 //
-//  Created by Skylar on 2019/9/25.
+//  Created by Skylar on 2019/10/2.
 //  Copyright © 2019 Skylar. All rights reserved.
 //
 
-import MetalKit
 import Foundation
+import MetalKit
 
-protocol Frame {
+protocol FlowData {
     var position: TimeInterval { get }
     var duration: TimeInterval { get }
 }
 
-class MarkerFrame: Frame {
+class Packet: YuuPacket, FlowData {
+    var position: TimeInterval {
+        get {
+            return TimeInterval(pos)
+        }
+    }
+    
+    var duration: TimeInterval {
+        get {
+            return TimeInterval(dur)
+        }
+    }
+}
+
+class MarkerFrame: FlowData {
     var position: TimeInterval = -.greatestFiniteMagnitude
     var duration: TimeInterval = -.greatestFiniteMagnitude
 }
 
-class AudioFrame: Frame {
+class AudioFrame: FlowData {
     var position: TimeInterval
     var duration: TimeInterval
     
@@ -34,7 +48,8 @@ class AudioFrame: Frame {
 
 }
 
-class NV12VideoFrame: Frame, RenderDataNV12 {
+class NV12VideoFrame: FlowData, RenderDataNV12 {
+    
     let width: Int
     let height: Int
     let pixelBuffer: CVPixelBuffer
@@ -51,7 +66,7 @@ class NV12VideoFrame: Frame, RenderDataNV12 {
     }
 }
 
-class I420VideoFrame: Frame, RenderDataI420 {
+class I420VideoFrame: FlowData, RenderDataI420 {
     var luma_channel_pixels: UnsafeMutablePointer<UInt8>
     var chromaB_channel_pixels: UnsafeMutablePointer<UInt8>
     var chromaR_channel_pixels: UnsafeMutablePointer<UInt8>

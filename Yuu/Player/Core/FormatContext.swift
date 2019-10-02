@@ -80,7 +80,7 @@ class FormatContext {
         settingDuration()
     }
     
-    func read(packet: YuuPacket) -> Int {
+    func read(packet: Packet) -> Int {
         return Int(av_read_frame(formatContext.cContextPtr, packet.cPacketPtr))
     }
     

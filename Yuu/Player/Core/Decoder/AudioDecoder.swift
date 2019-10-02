@@ -55,7 +55,7 @@ class AudioDecoder {
         }
     }
     
-    func decode(packet: YuuPacket) -> Array<AudioFrame> {
+    func decode(packet: Packet) -> Array<AudioFrame> {
         let defaultArray: [AudioFrame] = []
         var array: [AudioFrame] = []
         guard let _ = packet.data, let context = context else { return defaultArray }

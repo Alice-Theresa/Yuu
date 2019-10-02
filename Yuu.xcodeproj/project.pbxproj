@@ -37,9 +37,6 @@
 		942886FB233B16AA0073CCBC /* YuuError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 942886FA233B16AA0073CCBC /* YuuError.swift */; };
 		942886FD233B16B20073CCBC /* YuuCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 942886FC233B16B20073CCBC /* YuuCodec.swift */; };
 		942886FF233B17260073CCBC /* Render.swift in Sources */ = {isa = PBXBuildFile; fileRef = 942886FE233B17260073CCBC /* Render.swift */; };
-		94288701233B174A0073CCBC /* PacketQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94288700233B174A0073CCBC /* PacketQueue.swift */; };
-		94288703233B17530073CCBC /* FrameQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94288702233B17530073CCBC /* FrameQueue.swift */; };
-		94288705233B175B0073CCBC /* Frame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94288704233B175B0073CCBC /* Frame.swift */; };
 		94288708233B17B80073CCBC /* Track.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94288707233B17B80073CCBC /* Track.swift */; };
 		9428870A233B17E90073CCBC /* Mapping.metal in Sources */ = {isa = PBXBuildFile; fileRef = 94288709233B17E90073CCBC /* Mapping.metal */; };
 		9428870C233B17FB0073CCBC /* FormatContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9428870B233B17FB0073CCBC /* FormatContext.swift */; };
@@ -49,6 +46,8 @@
 		94288717233B5B990073CCBC /* PlayerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94288716233B5B990073CCBC /* PlayerController.swift */; };
 		94288719233B60810073CCBC /* Aimer.mkv in Resources */ = {isa = PBXBuildFile; fileRef = 94288718233B60810073CCBC /* Aimer.mkv */; };
 		9428874B233BC0110073CCBC /* PlayerControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9428874A233BC0110073CCBC /* PlayerControlView.swift */; };
+		9469478B2342E66400004863 /* ObjectQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9469478A2342E66400004863 /* ObjectQueue.swift */; };
+		9469478F2344505900004863 /* FlowData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9469478E2344505900004863 /* FlowData.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -199,9 +198,6 @@
 		942886FA233B16AA0073CCBC /* YuuError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YuuError.swift; sourceTree = "<group>"; };
 		942886FC233B16B20073CCBC /* YuuCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YuuCodec.swift; sourceTree = "<group>"; };
 		942886FE233B17260073CCBC /* Render.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Render.swift; sourceTree = "<group>"; };
-		94288700233B174A0073CCBC /* PacketQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacketQueue.swift; sourceTree = "<group>"; };
-		94288702233B17530073CCBC /* FrameQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameQueue.swift; sourceTree = "<group>"; };
-		94288704233B175B0073CCBC /* Frame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Frame.swift; sourceTree = "<group>"; };
 		94288706233B17710073CCBC /* SCShaderType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SCShaderType.h; sourceTree = "<group>"; };
 		94288707233B17B80073CCBC /* Track.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Track.swift; sourceTree = "<group>"; };
 		94288709233B17E90073CCBC /* Mapping.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Mapping.metal; sourceTree = "<group>"; };
@@ -212,6 +208,8 @@
 		94288716233B5B990073CCBC /* PlayerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerController.swift; sourceTree = "<group>"; };
 		94288718233B60810073CCBC /* Aimer.mkv */ = {isa = PBXFileReference; lastKnownFileType = file; path = Aimer.mkv; sourceTree = SOURCE_ROOT; };
 		9428874A233BC0110073CCBC /* PlayerControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerControlView.swift; sourceTree = "<group>"; };
+		9469478A2342E66400004863 /* ObjectQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectQueue.swift; sourceTree = "<group>"; };
+		9469478E2344505900004863 /* FlowData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowData.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -489,19 +487,13 @@
 		942886E8233B0F720073CCBC /* Core */ = {
 			isa = PBXGroup;
 			children = (
-				94288711233B181E0073CCBC /* AudioDecoder.swift */,
-				942886EB233B0FA10073CCBC /* VideoDecoder.swift */,
+				94694792234457BA00004863 /* Render */,
+				94694791234457AB00004863 /* Decoder */,
+				94694790234456B700004863 /* Model */,
 				9428870F233B18120073CCBC /* AudioManager.swift */,
 				9428870D233B18050073CCBC /* Controller.swift */,
 				9428870B233B17FB0073CCBC /* FormatContext.swift */,
-				94288704233B175B0073CCBC /* Frame.swift */,
-				94288707233B17B80073CCBC /* Track.swift */,
 				942886E9233B0F7D0073CCBC /* Synchronizer.swift */,
-				94288700233B174A0073CCBC /* PacketQueue.swift */,
-				94288702233B17530073CCBC /* FrameQueue.swift */,
-				942886FE233B17260073CCBC /* Render.swift */,
-				94288709233B17E90073CCBC /* Mapping.metal */,
-				94288706233B17710073CCBC /* SCShaderType.h */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -538,6 +530,35 @@
 				942886E8233B0F720073CCBC /* Core */,
 			);
 			path = Player;
+			sourceTree = "<group>";
+		};
+		94694790234456B700004863 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				9469478E2344505900004863 /* FlowData.swift */,
+				94288707233B17B80073CCBC /* Track.swift */,
+				9469478A2342E66400004863 /* ObjectQueue.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		94694791234457AB00004863 /* Decoder */ = {
+			isa = PBXGroup;
+			children = (
+				94288711233B181E0073CCBC /* AudioDecoder.swift */,
+				942886EB233B0FA10073CCBC /* VideoDecoder.swift */,
+			);
+			path = Decoder;
+			sourceTree = "<group>";
+		};
+		94694792234457BA00004863 /* Render */ = {
+			isa = PBXGroup;
+			children = (
+				942886FE233B17260073CCBC /* Render.swift */,
+				94288709233B17E90073CCBC /* Mapping.metal */,
+				94288706233B17710073CCBC /* SCShaderType.h */,
+			);
+			path = Render;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -619,7 +640,8 @@
 				942886F9233B16A10073CCBC /* YuuStream.swift in Sources */,
 				94288710233B18120073CCBC /* AudioManager.swift in Sources */,
 				9428870A233B17E90073CCBC /* Mapping.metal in Sources */,
-				94288703233B17530073CCBC /* FrameQueue.swift in Sources */,
+				9469478F2344505900004863 /* FlowData.swift in Sources */,
+				9469478B2342E66400004863 /* ObjectQueue.swift in Sources */,
 				942886F5233B14870073CCBC /* YuuPacket.swift in Sources */,
 				9428874B233BC0110073CCBC /* PlayerControlView.swift in Sources */,
 				94288708233B17B80073CCBC /* Track.swift in Sources */,
@@ -629,10 +651,8 @@
 				942886EF233B0FF90073CCBC /* YuuFormatContext.swift in Sources */,
 				942886EA233B0F7D0073CCBC /* Synchronizer.swift in Sources */,
 				94288712233B181E0073CCBC /* AudioDecoder.swift in Sources */,
-				94288705233B175B0073CCBC /* Frame.swift in Sources */,
 				9428870E233B18050073CCBC /* Controller.swift in Sources */,
 				942886DA233B0E170073CCBC /* CUtil.c in Sources */,
-				94288701233B174A0073CCBC /* PacketQueue.swift in Sources */,
 				942886F7233B168B0073CCBC /* YuuFrame.swift in Sources */,
 				9428863B233B02810073CCBC /* AppDelegate.swift in Sources */,
 				942886F3233B13210073CCBC /* YuuCodecParameters.swift in Sources */,
