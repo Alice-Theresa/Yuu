@@ -9,9 +9,9 @@
 import Foundation
 
 enum TrackType: Int {
-    case Video = 0
-    case Audio = 1
-    case Subtitle = 2
+    case video = 0
+    case audio = 1
+    case subtitle = 2
 }
 
 class Track {

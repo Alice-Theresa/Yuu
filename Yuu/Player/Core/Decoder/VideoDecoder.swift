@@ -9,10 +9,12 @@
 import Foundation
 import VideoToolbox
 
-protocol VideoDecoder {
-    var context: FormatContext? { get }
-    
+protocol Decodable {
     func decode(packet: Packet) -> Array<FlowData>
+}
+
+protocol VideoDecoder: Decodable {
+    var context: FormatContext? { get }
 }
 
 class VTDecoder: VideoDecoder {

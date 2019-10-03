@@ -45,11 +45,11 @@ class FormatContext {
         for (index, stream) in formatContext.streams.enumerated() {
             switch stream.codecParameters.mediaType {
             case AVMEDIA_TYPE_VIDEO:
-                videoTracks.append(Track(type: .Video, index: index, metadata: stream.metadata))
+                videoTracks.append(Track(type: .video, index: index, metadata: stream.metadata))
             case AVMEDIA_TYPE_AUDIO:
-                audioTracks.append(Track(type: .Audio, index: index, metadata: stream.metadata))
+                audioTracks.append(Track(type: .audio, index: index, metadata: stream.metadata))
             case AVMEDIA_TYPE_SUBTITLE:
-                subtitleTracks.append(Track(type: .Subtitle, index: index, metadata: stream.metadata))
+                subtitleTracks.append(Track(type: .subtitle, index: index, metadata: stream.metadata))
             default:
                 break
             }

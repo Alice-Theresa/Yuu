@@ -30,10 +30,7 @@ class Controller: NSObject {
     private var videoDecoder: VideoDecoder?
     private var audioDecoder: AudioDecoder?
     
-    private let videoFrameQueue = ObjectQueue()
-    private let audioFrameQueue = ObjectQueue()
-    private let videoPacketQueue = ObjectQueue()
-    private let audioPacketQueue = ObjectQueue()
+    private var queueManager: QueueManager!
     
     private let readPacketOperation = BlockOperation()
     private let videoDecodeOperation = BlockOperation()
@@ -47,12 +44,14 @@ class Controller: NSObject {
     public private(set) var state: ControlState = .Origin
     
     private var isSeeking = false
-    private var videoSeekingTime: TimeInterval = -Double.greatestFiniteMagnitude
-    private var audioSeekingTime: TimeInterval = -Double.greatestFiniteMagnitude
+    private var videoSeekingTime: TimeInterval = -.greatestFiniteMagnitude
+    private var audioSeekingTime: TimeInterval = -.greatestFiniteMagnitude
     private var syncer = Synchronizer()
     private var videoFrame: FlowData?
     private var audioFrame: AudioFrame?
     private var audioManager = AudioManager()
+    
+    private var timeStamps: [Int: TimeInterval] = [:]
     
     deinit {
         NotificationCenter.default.removeObserver(self, name: UIApplication.willResignActiveNotification, object: nil)
@@ -74,6 +73,7 @@ class Controller: NSObject {
     
     func open(path: String) {
         context.open(path: path)
+        queueManager = QueueManager(context: context)
 //        vtDecoder = VTDecoder(formatContext: context)
         ffDecoder = FFDecoder(formatContext: context)
         videoDecoder = ffDecoder
@@ -88,12 +88,8 @@ class Controller: NSObject {
         videoDecodeOperation.addExecutionBlock {
             self.decodeVideoFrame()
         }
-        audioDecodeOperation.addExecutionBlock {
-            self.decodeAudioFrame()
-        }
         controlQueue.addOperation(readPacketOperation)
         controlQueue.addOperation(videoDecodeOperation)
-        controlQueue.addOperation(audioDecodeOperation)
         audioManager.play()
     }
     
@@ -114,7 +110,7 @@ class Controller: NSObject {
         state = .Closed
         controlQueue.cancelAllOperations()
         controlQueue.waitUntilAllOperationsAreFinished()
-        flushQueue()
+        queueManager.allFlush()
         context.closeFile()
     }
     
@@ -128,13 +124,6 @@ class Controller: NSObject {
         pause()
     }
     
-    func flushQueue() {
-        videoFrameQueue.flush()
-        audioFrameQueue.flush()
-        videoPacketQueue.flush()
-        audioPacketQueue.flush()
-    }
-    
     func readPacket() {
         var finished = false
         while !finished {
@@ -145,15 +134,14 @@ class Controller: NSObject {
                 Thread.sleep(forTimeInterval: 0.03)
                 continue
             }
-            if videoPacketQueue.count > 10 * 1024 {
+            if queueManager.queueIsFull() {
                 Thread.sleep(forTimeInterval: 0.03)
                 continue
             }
             if isSeeking {
                 context.seeking(time: videoSeekingTime)
-                flushQueue()
-//                videoPacketQueue.enqueueDiscardPacket()
-//                audioPacketQueue.enqueueDiscardPacket()
+                queueManager.allFlush()
+                queueManager.enqueueDiscardPacket()
                 isSeeking = false
                 continue
             }
@@ -163,10 +151,8 @@ class Controller: NSObject {
                 finished = true
                 break
             } else {
-                if packet.streamIndex == context.videoIndex {
-                    videoPacketQueue.enqueue([packet])
-                } else if packet.streamIndex == context.audioIndex {
-                    audioPacketQueue.enqueue([packet])
+                if let queue = queueManager.packetsQueue[packet.streamIndex] {
+                    queue.enqueue([packet])
                 }
             }
         }
@@ -178,46 +164,51 @@ class Controller: NSObject {
                 Thread.sleep(forTimeInterval: 0.03)
                 continue
             }
-            if videoFrameQueue.count > 10 {
-                Thread.sleep(forTimeInterval: 0.03)
-                continue
+            var index = 0
+            var min: TimeInterval = .greatestFiniteMagnitude
+            for (key, queue) in queueManager.packetsQueue {
+                if queue.count == 0 {
+                    continue
+                }
+                if let timeStamp = timeStamps[index] {
+                    if timeStamp < min {
+                        min = timeStamp
+                        index = key
+                        continue
+                    }
+                } else {
+                    index = key
+                    break
+                }
             }
-            guard let packet = videoPacketQueue.dequeue() as? Packet else { continue }
+            let queue = queueManager.fetchFrameQueue(by: index)
+            while true {
+                if queue.count > 20 {
+                    Thread.sleep(forTimeInterval: 0.03)
+                    continue
+                } else {
+                    break
+                }
+            }
+            // dequeue packet
+            guard
+                let packetqueue = queueManager.packetsQueue[index],
+                let packet = packetqueue.dequeue() as? Packet else { continue }
+            // update timestamps
+            timeStamps[index] = packet.position
+            
             if packet.flags == .discard {
-                avcodec_flush_buffers(context.videoCodecContext?.cContextPtr)
-                videoFrameQueue.flush()
-                videoFrameQueue.enqueue([MarkerFrame.init()])
+                let c = queue.trackType == .video ? context.videoCodecContext : context.audioCodecContext
+                avcodec_flush_buffers(c?.cContextPtr)
+                queue.flush()
+                queue.enqueue([MarkerFrame.init()])
                 packet.unref()
                 continue
             }
-            if let vd = videoDecoder, packet.data != nil && packet.streamIndex >= 0 {
+            let decoder: Decodable? = queue.trackType == .video ? videoDecoder : audioDecoder
+            if let vd = decoder, packet.data != nil && packet.streamIndex >= 0 {
                 let frames = vd.decode(packet: packet)
-                videoFrameQueue.enqueue(frames)
-            }
-        }
-    }
-    
-    func decodeAudioFrame() {
-        while state != .Closed {
-            if state == .Paused {
-                Thread.sleep(forTimeInterval: 0.03)
-                continue
-            }
-            if audioFrameQueue.count > 10 {
-                Thread.sleep(forTimeInterval: 0.03)
-                continue
-            }
-            guard let packet = audioPacketQueue.dequeue() as? Packet else { continue }
-            if packet.flags == .discard {
-                avcodec_flush_buffers(context.audioCodecContext?.cContextPtr)
-                audioFrameQueue.flush()
-                audioFrameQueue.enqueue([MarkerFrame.init()])
-                packet.unref()
-                continue;
-            }
-            if let ad = audioDecoder, packet.data != nil && packet.streamIndex >= 0 {
-                let frames = ad.decode(packet: packet)
-                audioFrameQueue.enqueue(frames)
+                queue.enqueue(frames)
             }
         }
     }
@@ -243,7 +234,7 @@ extension Controller: MTKViewDelegate {
             delegate?.controlCenter(controller: self, didRender: playFrame.position, duration: context.duration)
             videoFrame = nil
         } else {
-            videoFrame = videoFrameQueue.dequeue() as? FlowData
+            videoFrame = queueManager.videoFrameQueue.dequeue()
         }
     }
     
@@ -277,7 +268,7 @@ extension Controller: AudioManagerDelegate {
                 } else {
                     self.audioFrame = nil
                 }
-            } else if let frame = audioFrameQueue.dequeue() {
+            } else if let frame = queueManager.audioFrameQueue.dequeue() {
                 if frame is MarkerFrame {
                     memset(od, 0, Int(nof * numberOfChannels) * MemoryLayout<Int16>.size);
                     audioSeekingTime = -Double.greatestFiniteMagnitude

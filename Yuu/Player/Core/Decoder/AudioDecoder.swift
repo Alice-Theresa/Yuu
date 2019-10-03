@@ -11,7 +11,7 @@ import Foundation
 import Foundation
 import Accelerate
 
-class AudioDecoder {
+class AudioDecoder: Decodable {
     
     let samplingRate: Int32 = 44100
     let channelCount: Int32 = 2
@@ -22,7 +22,7 @@ class AudioDecoder {
     var _audio_swr_buffer: UnsafeMutableRawPointer?
     var _audio_swr_buffer_size: Int = 0
     
-    weak var context: FormatContext?
+    var context: FormatContext?
     var codecContext: UnsafeMutablePointer<AVCodecContext>?
     
     deinit {
@@ -55,7 +55,7 @@ class AudioDecoder {
         }
     }
     
-    func decode(packet: Packet) -> Array<AudioFrame> {
+    func decode(packet: Packet) -> Array<FlowData> {
         let defaultArray: [AudioFrame] = []
         var array: [AudioFrame] = []
         guard let _ = packet.data, let context = context else { return defaultArray }
