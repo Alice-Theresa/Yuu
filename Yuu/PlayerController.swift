@@ -73,7 +73,7 @@ class PlayerController: UIViewController {
     }
     
     @objc func resumeOrPause() {
-        if controller.state == .Playing {
+        if controller.state == .playing {
             controller.pause()
             playerView.settingPause()
         } else {
@@ -98,7 +98,7 @@ class PlayerController: UIViewController {
 }
 
 extension PlayerController: ControllerProtocol {
-    func controlCenter(controller: Controller, didRender position: TimeInterval, duration: TimeInterval) {
+    func controlCenter(didRender position: TimeInterval, duration: TimeInterval) {
         let playing = Int(position)
         let length = Int(duration)
         let total = "\(length / 3600):\(length % 3600 / 60):\(length % 3600 % 60)"

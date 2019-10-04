@@ -10,7 +10,7 @@ import Foundation
 import AVFoundation
 import Accelerate
 
-protocol AudioManagerDelegate: NSObjectProtocol {
+protocol AudioManagerDelegate: class {
     func fetch(outputData: UnsafeMutablePointer<Int16>, numberOfFrames: UInt32, numberOfChannels: UInt32)
 }
 

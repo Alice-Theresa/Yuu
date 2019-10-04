@@ -35,7 +35,7 @@ class QueueManager {
         }
     }
 
-    func queueIsFull() -> Bool {
+    func packetQueueIsFull() -> Bool {
         var total = 0
         for queue in packetsQueue {
             total += queue.value.count

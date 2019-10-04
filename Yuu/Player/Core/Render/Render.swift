@@ -40,7 +40,7 @@ class Render {
         return descriptor
     }()
     
-    private lazy var yuvPipelineDescriptor:MTLRenderPipelineDescriptor = {
+    private lazy var yuvPipelineDescriptor: MTLRenderPipelineDescriptor = {
         let descriptor = MTLRenderPipelineDescriptor()
         descriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
         descriptor.vertexFunction = library.makeFunction(name: "mappingVertex")
