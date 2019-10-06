@@ -18,7 +18,7 @@ class DecodeLayer: Controlable {
     private let queueManager: QueueManager
     private let context: FormatContext
     
-    private var timeStamps: [Int: TimeInterval] = [:]
+    private var timeStamps: [Int: CMTime] = [:]
     
 //    private var vtDecoder: VTDecoder
     private var ffDecoder: FFDecoder
@@ -62,14 +62,14 @@ class DecodeLayer: Controlable {
                 Thread.sleep(forTimeInterval: 0.03)
                 continue
             }
-            var index = 0
-            var min: TimeInterval = .greatestFiniteMagnitude
+            var index = -1
+            var min: CMTime = .zero
             for (key, queue) in queueManager.packetsQueue {
                 if queue.count == 0 {
                     continue
                 }
                 if let timeStamp = timeStamps[index] {
-                    if timeStamp < min {
+                    if CMTimeCompare(timeStamp, min) < 0 {
                         min = timeStamp
                         index = key
                         continue
@@ -78,6 +78,9 @@ class DecodeLayer: Controlable {
                     index = key
                     break
                 }
+            }
+            if index == -1 {
+                continue
             }
             let queue = queueManager.fetchFrameQueue(by: index)
             while true {
@@ -94,7 +97,6 @@ class DecodeLayer: Controlable {
                 let packet = packetqueue.dequeue() as? Packet else { continue }
             // update timestamps
             timeStamps[index] = packet.position
-//            print("\(index) + \(packet.position)")
             
             if packet.flags == .discard {
                 let c = queue.trackType == .video ? context.videoCodecContext : context.audioCodecContext

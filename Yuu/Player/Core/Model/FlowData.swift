@@ -10,39 +10,28 @@ import Foundation
 import MetalKit
 
 protocol FlowData {
-    var position: TimeInterval { get }
-    var duration: TimeInterval { get }
+    var duration: CMTime { get }
+    var position: CMTime { get }
 }
 
 class Packet: YuuPacket, FlowData {
-    var position: TimeInterval {
-        get {
-            return TimeInterval(pos)
-        }
-    }
-    
-    var duration: TimeInterval {
-        get {
-            return TimeInterval(dur)
-        }
-    }
+    var position: CMTime = .zero
+    var duration: CMTime = .zero
 }
 
 class MarkerFrame: FlowData {
-    var position: TimeInterval = -.greatestFiniteMagnitude
-    var duration: TimeInterval = -.greatestFiniteMagnitude
+    var duration: CMTime = .zero
+    var position: CMTime = .zero
 }
 
 class AudioFrame: FlowData {
-    var position: TimeInterval
-    var duration: TimeInterval
+    var duration: CMTime = .zero
+    var position: CMTime = .zero
     
     var samples: Data
     var outputOffset: Int = 0
 
-    init(position: TimeInterval, duration: TimeInterval, samples: Data) {
-        self.position = position
-        self.duration = duration
+    init(samples: Data) {
         self.samples = samples
     }
 
@@ -54,12 +43,10 @@ class NV12VideoFrame: FlowData, RenderDataNV12 {
     let height: Int
     let pixelBuffer: CVPixelBuffer
     
-    let position: TimeInterval
-    let duration: TimeInterval
+    var duration: CMTime = .zero
+    var position: CMTime = .zero
     
-    init(position: TimeInterval, duration: TimeInterval, pixelBuffer: CVPixelBuffer) {
-        self.position = position
-        self.duration = duration
+    init(pixelBuffer: CVPixelBuffer) {
         self.pixelBuffer = pixelBuffer
         self.width = CVPixelBufferGetWidth(pixelBuffer)
         self.height = CVPixelBufferGetHeight(pixelBuffer)
@@ -74,8 +61,8 @@ class I420VideoFrame: FlowData, RenderDataI420 {
     let width: Int
     let height: Int
     
-    let position: TimeInterval
-    let duration: TimeInterval
+    var duration: CMTime = .zero
+    var position: CMTime = .zero
     
     deinit {
         luma_channel_pixels.deallocate()
@@ -83,9 +70,7 @@ class I420VideoFrame: FlowData, RenderDataI420 {
         chromaR_channel_pixels.deallocate()
     }
     
-    init(position: TimeInterval, duration: TimeInterval, width: Int, height: Int, frame: YuuFrame) {
-        self.position = position
-        self.duration = duration
+    init(width: Int, height: Int, frame: YuuFrame) {
         self.width = width
         self.height = height
         

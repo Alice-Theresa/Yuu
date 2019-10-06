@@ -88,8 +88,10 @@ class DemuxLayer: Controlable {
                 break
             } else {
                 if let queue = queueManager.packetsQueue[packet.streamIndex] {
+                    let desc = queue.trackType == .video ? context.codecDescriptor : context.audioCodecDescriptor
+                    let timeBase = desc!.timebase
+                    packet.position = CMTimeMake(value: Int64(packet.pts) * Int64(timeBase.num), timescale: timeBase.den)
                     queue.enqueue([packet])
-                    print("\(queue.trackType) + \(packet.position)")
                 }
             }
         }

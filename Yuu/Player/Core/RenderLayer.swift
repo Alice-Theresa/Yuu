@@ -85,7 +85,7 @@ extension RenderLayer: MTKViewDelegate {
                 return
             }
             render.render(frame: playFrame as! RenderData, drawIn: mtkView)
-            delegate?.controlCenter(didRender: playFrame.position, duration: context.duration)
+//            delegate?.controlCenter(didRender: playFrame.position, duration: context.duration)
             videoFrame = nil
         } else {
             videoFrame = queueManager.videoFrameQueue.dequeue()

@@ -15,8 +15,8 @@ enum QueueType {
 
 class QueueManager {
 
-    let videoFrameQueue  = ObjectQueue(queueType: .frame, trackType: .video)
-    let audioFrameQueue  = ObjectQueue(queueType: .frame, trackType: .audio)
+    let videoFrameQueue  = ObjectQueue(queueType: .frame, trackType: .video, needSort: true)
+    let audioFrameQueue  = ObjectQueue(queueType: .frame, trackType: .audio, needSort: true)
 
     private let videoTracksIndexes: [Int]
     private let audioTracksIndexes: [Int]
@@ -28,10 +28,10 @@ class QueueManager {
         audioTracksIndexes = context.audioTracks.map { $0.index }
         packetsQueue = [:]
         for track in context.videoTracks {
-            packetsQueue[track.index] = ObjectQueue(queueType: .packet, trackType: .video)
+            packetsQueue[track.index] = ObjectQueue(queueType: .packet, trackType: .video, needSort: false)
         }
         for track in context.audioTracks {
-            packetsQueue[track.index] = ObjectQueue(queueType: .packet, trackType: .audio)
+            packetsQueue[track.index] = ObjectQueue(queueType: .packet, trackType: .audio, needSort: false)
         }
     }
 
@@ -74,14 +74,16 @@ class ObjectQueue {
     
     let queueType: QueueType
     let trackType: TrackType
+    let needSort: Bool
     
     private let semaphore = DispatchSemaphore(value: 1)
     private(set) var count = 0
     private var queue: [FlowData] = []
     
-    init(queueType: QueueType, trackType: TrackType) {
+    init(queueType: QueueType, trackType: TrackType, needSort: Bool) {
         self.queueType = queueType
         self.trackType = trackType
+        self.needSort = needSort
     }
     
     func enqueue(_ data: Array<FlowData>) {
@@ -91,7 +93,9 @@ class ObjectQueue {
         }
         count += data.count
         queue.append(contentsOf: data)
-        queue.sort { $0.position < $1.position }
+        if needSort {
+            queue.sort { CMTimeCompare($0.position, $1.position) == -1 }
+        }
     }
     
     func dequeue() -> FlowData? {

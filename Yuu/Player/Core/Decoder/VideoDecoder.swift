@@ -102,9 +102,9 @@ class VTDecoder: VideoDecoder {
                         
                     }
                     if let outputPixelBuffer = outputPixelBuffer, let context = context {
-                        let videoFrame = NV12VideoFrame(position: Double(packet.pts) * context.videoTimebase,
-                                                        duration: Double(packet.dur) * context.videoTimebase,
-                                                        pixelBuffer: outputPixelBuffer)
+                        let videoFrame = NV12VideoFrame(pixelBuffer: outputPixelBuffer)
+//                        videoFrame.durationStamp = ds
+//                        videoFrame.positionStamp = ps
                         packet.unref()
                         return [videoFrame]
                     }
@@ -168,7 +168,7 @@ class FFDecoder: VideoDecoder {
         while true {
             do {
                 try vcc.receiveFrame(tempFrame)
-                if let frame = videoFrameFromTempFrame(packetSize: Int(packet.size)) {
+                if let frame = videoFrameFromTempFrame() {
                     array.append(frame)
                 }
             } catch {
@@ -179,19 +179,22 @@ class FFDecoder: VideoDecoder {
         return array
     }
     
-    func videoFrameFromTempFrame(packetSize: Int) -> I420VideoFrame?  {
+    func videoFrameFromTempFrame() -> I420VideoFrame?  {
         guard let _ = tempFrame.data[0],
             let _ = tempFrame.data[1],
             let _ = tempFrame.data[2],
             let context = context,
             let vcc = context.videoCodecContext else { return nil }
-        let position = Double(av_frame_get_best_effort_timestamp(tempFrame.cFramePtr)) * context.videoTimebase + Double(tempFrame.repeatPicture) * context.videoTimebase * 0.5
-        let duration = Double(av_frame_get_pkt_duration(tempFrame.cFramePtr)) * context.videoTimebase
-        let videoFrame = I420VideoFrame(position: position,
-                                        duration: duration,
-                                        width: vcc.width,
+
+        let timeBase = context.codecDescriptor!.timebase
+        
+        let ps = CMTimeMake(value: Int64(tempFrame.bestEffortTimestamp) * Int64(timeBase.num), timescale: timeBase.den)
+        let ds = CMTimeMake(value: Int64(tempFrame.pktDuration) * Int64(timeBase.num), timescale: timeBase.den)
+        let videoFrame = I420VideoFrame(width: vcc.width,
                                         height: vcc.height,
                                         frame: tempFrame)
+        videoFrame.duration = ds
+        videoFrame.position = ps
         return videoFrame
     }
 

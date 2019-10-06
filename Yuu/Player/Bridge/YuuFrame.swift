@@ -62,4 +62,12 @@ class YuuFrame {
     var repeatPicture: Int {
         return Int(cFrame.repeat_pict)
     }
+    
+    var pktDuration: Int {
+        return Int(cFrame.pkt_duration)
+    }
+    
+    var bestEffortTimestamp: Int {
+        return Int(cFrame.best_effort_timestamp)
+    }
 }

@@ -24,7 +24,6 @@ enum ControlState {
     case origin
     case playing
     case paused
-//    case stopped
     case closed
 }
 
@@ -33,7 +32,7 @@ class Controller {
     private let context  = FormatContext()
     
     private var queueManager: QueueManager!
-    private var packetLayer: DemuxLayer!
+    private var demuxLayer: DemuxLayer!
     private var decodeLayer: DecodeLayer!
     private var renderLayer: RenderLayer!
     
@@ -42,9 +41,6 @@ class Controller {
     weak var delegate: ControllerProtocol?
     
     public private(set) var state: ControlState = .origin
-    
-    private var videoSeekingTime: TimeInterval = -.greatestFiniteMagnitude
-    private var audioSeekingTime: TimeInterval = -.greatestFiniteMagnitude
     
     deinit {
         NotificationCenter.default.removeObserver(self, name: UIApplication.willResignActiveNotification, object: nil)
@@ -58,7 +54,7 @@ class Controller {
     func open(path: String) {
         context.open(path: path)
         queueManager = QueueManager(context: context)
-        packetLayer = DemuxLayer(context: context, queueManager: queueManager)
+        demuxLayer = DemuxLayer(context: context, queueManager: queueManager)
         decodeLayer = DecodeLayer(context: context, queueManager: queueManager)
         renderLayer = RenderLayer(context: context, queueManager: queueManager, mtkView: mtkView)
         start()
@@ -66,37 +62,37 @@ class Controller {
     
     func start() {
         state = .playing
-        packetLayer.start()
+        demuxLayer.start()
         decodeLayer.start()
         renderLayer.start()
     }
     
     func pause() {
         state = .paused
-        packetLayer.pause()
+        demuxLayer.pause()
         decodeLayer.pause()
         renderLayer.pause()
     }
     
     func resume() {
         state = .playing
-        packetLayer.resume()
+        demuxLayer.resume()
         decodeLayer.resume()
         renderLayer.resume()
     }
     
     func close() {
         state = .closed
-        packetLayer.close()
+        demuxLayer.close()
         decodeLayer.close()
         renderLayer.close()
         queueManager.allFlush()
         context.closeFile()
     }
     
-    func seeking(time: TimeInterval) {
-        videoSeekingTime = time * context.duration
-        packetLayer.seeking(time: videoSeekingTime)
+    func seeking(percentage: TimeInterval) {
+        let seconds = CMTimeGetSeconds(context.totalDuration)
+        demuxLayer.seeking(time: percentage * seconds)
     }
     
     @objc func appWillResignActive() {

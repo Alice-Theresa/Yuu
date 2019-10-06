@@ -112,11 +112,15 @@ class AudioDecoder: Decodable {
         let numberOfElements = numberOfFrames * channelCount
         let length = Int(numberOfElements) * MemoryLayout<Int16>.size
         
-        let position = TimeInterval(av_frame_get_best_effort_timestamp(temp.cFramePtr)) * TimeInterval(context!.audioTimebase)
-        let duration = TimeInterval(av_frame_get_pkt_duration(temp.cFramePtr)) * TimeInterval(context!.audioTimebase)
+        let timeBase = context!.audioCodecDescriptor!.timebase
+        let ps = CMTimeMake(value: Int64(temp.bestEffortTimestamp) * Int64(timeBase.num), timescale: timeBase.den)
+        let ds = CMTimeMake(value: Int64(temp.pktDuration) * Int64(timeBase.num), timescale: timeBase.den)
         
         let samples = Data(bytes: audioDataBuffer!, count: length)
-        let audioFrame = AudioFrame(position: position, duration: duration, samples: samples)
+        let audioFrame = AudioFrame(samples: samples)
+        
+        audioFrame.duration = ds
+        audioFrame.position = ps
         
         return audioFrame
     }

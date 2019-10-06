@@ -10,26 +10,31 @@ import Foundation
 
 class Synchronizer {
     
-    private var audioFramePlayTime: TimeInterval = 0
-    private var audioFramePosition: TimeInterval = 0
+    private var audioFramePlayTime: CMTime = .zero
+    private var audioFramePosition: CMTime = .zero
     private let semaphore = DispatchSemaphore(value: 1)
     
-    func updateAudioClock(position: TimeInterval) {
+    func updateAudioClock(position: CMTime) {
         semaphore.wait()
         defer {
             semaphore.signal()
         }
-        audioFramePlayTime = Date().timeIntervalSince1970
+        audioFramePlayTime = currentCMTime()
         audioFramePosition = position
     }
     
-    func shouldRenderVideoFrame(position: TimeInterval, duration: TimeInterval) -> Bool {
+    func shouldRenderVideoFrame(position: CMTime, duration: CMTime) -> Bool {
         semaphore.wait()
         defer {
             semaphore.signal()
         }
-        let time = Date().timeIntervalSince1970
-        return audioFramePosition + time - audioFramePlayTime >= position + duration ? true : false
+        let diffTime = CMTimeSubtract(currentCMTime(), audioFramePlayTime)
+        return CMTimeAdd(audioFramePosition, diffTime) >= CMTimeAdd(position, duration) ? true : false
     }
+    
+    private func currentCMTime() -> CMTime {
+        return CMTime(seconds: Date().timeIntervalSince1970, preferredTimescale: AV_TIME_BASE)
+    }
+
 }
 

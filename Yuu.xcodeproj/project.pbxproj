@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		941493F62349B488007EFB6F /* CodecDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 941493F52349B488007EFB6F /* CodecDescriptor.swift */; };
 		9428863B233B02810073CCBC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9428863A233B02810073CCBC /* AppDelegate.swift */; };
 		9428863F233B02810073CCBC /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9428863E233B02810073CCBC /* ViewController.swift */; };
 		94288642233B02810073CCBC /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 94288640233B02810073CCBC /* Main.storyboard */; };
@@ -54,6 +55,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		941493F52349B488007EFB6F /* CodecDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodecDescriptor.swift; sourceTree = "<group>"; };
 		94288637233B02800073CCBC /* Yuu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Yuu.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9428863A233B02810073CCBC /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		9428863E233B02810073CCBC /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -547,6 +549,7 @@
 			children = (
 				9469478E2344505900004863 /* FlowData.swift */,
 				94288707233B17B80073CCBC /* Track.swift */,
+				941493F52349B488007EFB6F /* CodecDescriptor.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -664,6 +667,7 @@
 				942886EA233B0F7D0073CCBC /* Synchronizer.swift in Sources */,
 				94288712233B181E0073CCBC /* AudioDecoder.swift in Sources */,
 				9428870E233B18050073CCBC /* Controller.swift in Sources */,
+				941493F62349B488007EFB6F /* CodecDescriptor.swift in Sources */,
 				942886DA233B0E170073CCBC /* CUtil.c in Sources */,
 				942886F7233B168B0073CCBC /* YuuFrame.swift in Sources */,
 				9428863B233B02810073CCBC /* AppDelegate.swift in Sources */,

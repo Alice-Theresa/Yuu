@@ -17,6 +17,7 @@ class FormatContext {
     var videoTimebase: TimeInterval = 0
     var audioTimebase: TimeInterval = 0
     var duration: TimeInterval = 0
+    var totalDuration: CMTime = .zero
     
     var videoTracks: [Track] = []
     var audioTracks: [Track] = []
@@ -25,6 +26,9 @@ class FormatContext {
     let formatContext: YuuFormatContext
     var videoCodecContext: YuuCodecContext?
     var audioCodecContext: YuuCodecContext?
+    
+    var codecDescriptor: CodecDescriptor?
+    var audioCodecDescriptor: CodecDescriptor?
     
     init() {
         av_register_all()
@@ -110,9 +114,12 @@ class FormatContext {
         if audioStream.timebase.den > 0 && audioStream.timebase.num > 0 {
             audioTimebase = av_q2d(audioStream.timebase)
         }
+        codecDescriptor = CodecDescriptor(timebase: stream.timebase)
+        audioCodecDescriptor = CodecDescriptor(timebase: audioStream.timebase)
     }
     
     private func settingDuration() {
         duration = TimeInterval(formatContext.duration) / TimeInterval(AV_TIME_BASE)
+        totalDuration = CMTimeMake(value: formatContext.duration, timescale: AV_TIME_BASE)
     }
 }

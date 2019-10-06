@@ -87,7 +87,7 @@ class PlayerController: UIViewController {
     }
     
     @objc func seekingTime() {
-        controller.seeking(time: TimeInterval(playerView.progressSlide.value))
+        controller.seeking(percentage: TimeInterval(playerView.progressSlide.value))
         isTouchSlider = false
     }
     
