@@ -102,9 +102,9 @@ class VTDecoder: VideoDecoder {
                         
                     }
                     if let outputPixelBuffer = outputPixelBuffer, let context = context {
-                        let videoFrame = NV12VideoFrame(pixelBuffer: outputPixelBuffer)
-//                        videoFrame.durationStamp = ds
-//                        videoFrame.positionStamp = ps
+                        let timeBase = context.codecDescriptor!.timebase
+                        let position = CMTimeMake(value:  packet.pts * Int64(timeBase.num), timescale: timeBase.den)
+                        let videoFrame = NV12VideoFrame(duration: packet.duration, position: position, pixelBuffer: outputPixelBuffer)
                         packet.unref()
                         return [videoFrame]
                     }
@@ -190,7 +190,9 @@ class FFDecoder: VideoDecoder {
         
         let ps = CMTimeMake(value: Int64(tempFrame.bestEffortTimestamp) * Int64(timeBase.num), timescale: timeBase.den)
         let ds = CMTimeMake(value: Int64(tempFrame.pktDuration) * Int64(timeBase.num), timescale: timeBase.den)
-        let videoFrame = I420VideoFrame(width: vcc.width,
+        let videoFrame = I420VideoFrame(duration: ds,
+                                        position: ps,
+                                        width: vcc.width,
                                         height: vcc.height,
                                         frame: tempFrame)
         videoFrame.duration = ds

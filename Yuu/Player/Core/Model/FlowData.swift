@@ -15,8 +15,20 @@ protocol FlowData {
 }
 
 class Packet: YuuPacket, FlowData {
-    var position: CMTime = .zero
-    var duration: CMTime = .zero
+    var position: CMTime
+    var duration: CMTime
+    
+    init(duration: CMTime, position: CMTime) {
+        self.duration = duration
+        self.position = position
+        super.init()
+    }
+    
+    override init() {
+        self.duration = .zero
+        self.position = .zero
+        super.init()
+    }
 }
 
 class MarkerFrame: FlowData {
@@ -31,7 +43,9 @@ class AudioFrame: FlowData {
     var samples: Data
     var outputOffset: Int = 0
 
-    init(samples: Data) {
+    init(duration: CMTime, position: CMTime, samples: Data) {
+        self.duration = duration
+        self.position = position
         self.samples = samples
     }
 
@@ -43,10 +57,12 @@ class NV12VideoFrame: FlowData, RenderDataNV12 {
     let height: Int
     let pixelBuffer: CVPixelBuffer
     
-    var duration: CMTime = .zero
-    var position: CMTime = .zero
+    var duration: CMTime
+    var position: CMTime
     
-    init(pixelBuffer: CVPixelBuffer) {
+    init(duration: CMTime, position: CMTime, pixelBuffer: CVPixelBuffer) {
+        self.duration = duration
+        self.position = position
         self.pixelBuffer = pixelBuffer
         self.width = CVPixelBufferGetWidth(pixelBuffer)
         self.height = CVPixelBufferGetHeight(pixelBuffer)
@@ -61,8 +77,8 @@ class I420VideoFrame: FlowData, RenderDataI420 {
     let width: Int
     let height: Int
     
-    var duration: CMTime = .zero
-    var position: CMTime = .zero
+    var duration: CMTime
+    var position: CMTime
     
     deinit {
         luma_channel_pixels.deallocate()
@@ -70,7 +86,9 @@ class I420VideoFrame: FlowData, RenderDataI420 {
         chromaR_channel_pixels.deallocate()
     }
     
-    init(width: Int, height: Int, frame: YuuFrame) {
+    init(duration: CMTime, position: CMTime, width: Int, height: Int, frame: YuuFrame) {
+        self.duration = duration
+        self.position = position
         self.width = width
         self.height = height
         

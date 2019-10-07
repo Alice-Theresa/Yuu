@@ -20,17 +20,17 @@ class DecodeLayer: Controlable {
     
     private var timeStamps: [Int: CMTime] = [:]
     
-//    private var vtDecoder: VTDecoder
-    private var ffDecoder: FFDecoder
+    private var vtDecoder: VTDecoder
+//    private var ffDecoder: FFDecoder
     private var videoDecoder: VideoDecoder
     private var audioDecoder: AudioDecoder
     
     init(context: FormatContext, queueManager: QueueManager) {
         self.queueManager = queueManager
         self.context = context
-//        vtDecoder = VTDecoder(formatContext: context)
-        ffDecoder = FFDecoder(formatContext: context)
-        videoDecoder = ffDecoder
+        vtDecoder = VTDecoder(formatContext: context)
+//        ffDecoder = FFDecoder(formatContext: context)
+        videoDecoder = vtDecoder
         audioDecoder = AudioDecoder(formatContext: context)
     }
     

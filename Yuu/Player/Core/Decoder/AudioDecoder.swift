@@ -117,7 +117,7 @@ class AudioDecoder: Decodable {
         let ds = CMTimeMake(value: Int64(temp.pktDuration) * Int64(timeBase.num), timescale: timeBase.den)
         
         let samples = Data(bytes: audioDataBuffer!, count: length)
-        let audioFrame = AudioFrame(samples: samples)
+        let audioFrame = AudioFrame(duration: ds, position: ps, samples: samples)
         
         audioFrame.duration = ds
         audioFrame.position = ps
