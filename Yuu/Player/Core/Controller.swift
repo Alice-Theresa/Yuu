@@ -31,7 +31,6 @@ class Controller {
     
     private let context  = FormatContext()
     
-    private var queueManager: QueueManager!
     private var demuxLayer: DemuxLayer!
     private var decodeLayer: DecodeLayer!
     private var renderLayer: RenderLayer!
@@ -53,7 +52,7 @@ class Controller {
     
     func open(path: String) {
         context.open(path: path)
-        queueManager = QueueManager(context: context)
+        
         demuxLayer = DemuxLayer(context: context)
         decodeLayer = DecodeLayer(context: context, demuxLayer: demuxLayer)
         renderLayer = RenderLayer(context: context, decodeLayer: decodeLayer, mtkView: mtkView)
@@ -86,7 +85,7 @@ class Controller {
         demuxLayer.close()
         decodeLayer.close()
         renderLayer.close()
-        queueManager.allFlush()
+//        queueManager.allFlush()
         context.closeFile()
     }
     
