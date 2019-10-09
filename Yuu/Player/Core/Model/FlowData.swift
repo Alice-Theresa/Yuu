@@ -15,20 +15,11 @@ protocol FlowData {
 }
 
 class Packet: YuuPacket, FlowData {
-    var position: CMTime
-    var duration: CMTime
+    var duration: CMTime = .zero
+    var position: CMTime = .zero
     
-    init(duration: CMTime, position: CMTime) {
-        self.duration = duration
-        self.position = position
-        super.init()
-    }
+    var codecDescriptor: CodecDescriptor?
     
-    override init() {
-        self.duration = .zero
-        self.position = .zero
-        super.init()
-    }
 }
 
 class MarkerFrame: FlowData {

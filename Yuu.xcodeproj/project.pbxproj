@@ -48,7 +48,7 @@
 		94288719233B60810073CCBC /* Aimer.mkv in Resources */ = {isa = PBXBuildFile; fileRef = 94288718233B60810073CCBC /* Aimer.mkv */; };
 		9428874B233BC0110073CCBC /* PlayerControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9428874A233BC0110073CCBC /* PlayerControlView.swift */; };
 		9469478F2344505900004863 /* FlowData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9469478E2344505900004863 /* FlowData.swift */; };
-		946947942344988B00004863 /* QueueManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 946947932344988B00004863 /* QueueManager.swift */; };
+		946947942344988B00004863 /* QueueHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 946947932344988B00004863 /* QueueHelper.swift */; };
 		94B5A1062345DB94002F87B9 /* DemuxLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B5A1052345DB94002F87B9 /* DemuxLayer.swift */; };
 		94B5A1082345E062002F87B9 /* DecodeLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B5A1072345E062002F87B9 /* DecodeLayer.swift */; };
 		94B5A10A23461C1A002F87B9 /* RenderLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B5A10923461C1A002F87B9 /* RenderLayer.swift */; };
@@ -214,7 +214,7 @@
 		94288718233B60810073CCBC /* Aimer.mkv */ = {isa = PBXFileReference; lastKnownFileType = file; path = Aimer.mkv; sourceTree = SOURCE_ROOT; };
 		9428874A233BC0110073CCBC /* PlayerControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerControlView.swift; sourceTree = "<group>"; };
 		9469478E2344505900004863 /* FlowData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowData.swift; sourceTree = "<group>"; };
-		946947932344988B00004863 /* QueueManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueManager.swift; sourceTree = "<group>"; };
+		946947932344988B00004863 /* QueueHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueHelper.swift; sourceTree = "<group>"; };
 		94B5A1052345DB94002F87B9 /* DemuxLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemuxLayer.swift; sourceTree = "<group>"; };
 		94B5A1072345E062002F87B9 /* DecodeLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecodeLayer.swift; sourceTree = "<group>"; };
 		94B5A10923461C1A002F87B9 /* RenderLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderLayer.swift; sourceTree = "<group>"; };
@@ -499,12 +499,12 @@
 				94694791234457AB00004863 /* Decoder */,
 				94694790234456B700004863 /* Model */,
 				9428870F233B18120073CCBC /* AudioManager.swift */,
-				946947932344988B00004863 /* QueueManager.swift */,
+				946947932344988B00004863 /* QueueHelper.swift */,
+				9428870B233B17FB0073CCBC /* FormatContext.swift */,
 				9428870D233B18050073CCBC /* Controller.swift */,
 				94B5A1052345DB94002F87B9 /* DemuxLayer.swift */,
 				94B5A1072345E062002F87B9 /* DecodeLayer.swift */,
 				94B5A10923461C1A002F87B9 /* RenderLayer.swift */,
-				9428870B233B17FB0073CCBC /* FormatContext.swift */,
 				942886E9233B0F7D0073CCBC /* Synchronizer.swift */,
 			);
 			path = Core;
@@ -651,7 +651,7 @@
 				9428863F233B02810073CCBC /* ViewController.swift in Sources */,
 				942886F9233B16A10073CCBC /* YuuStream.swift in Sources */,
 				94288710233B18120073CCBC /* AudioManager.swift in Sources */,
-				946947942344988B00004863 /* QueueManager.swift in Sources */,
+				946947942344988B00004863 /* QueueHelper.swift in Sources */,
 				9428870A233B17E90073CCBC /* Mapping.metal in Sources */,
 				94B5A1062345DB94002F87B9 /* DemuxLayer.swift in Sources */,
 				9469478F2344505900004863 /* FlowData.swift in Sources */,

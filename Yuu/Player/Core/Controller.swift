@@ -54,8 +54,8 @@ class Controller {
     func open(path: String) {
         context.open(path: path)
         queueManager = QueueManager(context: context)
-        demuxLayer = DemuxLayer(context: context, queueManager: queueManager)
-        decodeLayer = DecodeLayer(context: context, queueManager: queueManager)
+        demuxLayer = DemuxLayer(context: context)
+        decodeLayer = DecodeLayer(context: context, queueManager: queueManager, demuxLayer: demuxLayer)
         renderLayer = RenderLayer(context: context, queueManager: queueManager, mtkView: mtkView)
         start()
     }

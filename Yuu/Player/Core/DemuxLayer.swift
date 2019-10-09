@@ -8,15 +8,10 @@
 
 import Foundation
 
-protocol DemuxPacketProtocol: class {
-    func packetQueueIsFull() -> Bool
-    func enqueueDiscardPacket()
-    func enqueue(_ packet: Array<FlowData>)
-}
 
 class DemuxLayer: Controlable {
     
-    weak var delegate: DemuxPacketProtocol?
+    weak var delegate: DemuxToQueueProtocol?
 
     private var state = ControlState.origin
     private var isSeeking = false
@@ -24,11 +19,13 @@ class DemuxLayer: Controlable {
     
     private let controlQueue = OperationQueue()
     
-    private let queueManager: QueueManager
     private let context: FormatContext
     
-    init(context: FormatContext, queueManager: QueueManager) {
-        self.queueManager = queueManager
+    deinit {
+        print("demux layer deinit")
+    }
+    
+    init(context: FormatContext) {
         self.context = context
     }
     
@@ -61,8 +58,11 @@ class DemuxLayer: Controlable {
     }
     
     private func readPacket() {
-        var finished = false
-        while !finished {
+        while true {
+            guard let delegate = delegate else {
+                Thread.sleep(forTimeInterval: 0.03)
+                continue
+            }
             if state == .closed {
                 break
             }
@@ -70,29 +70,23 @@ class DemuxLayer: Controlable {
                 Thread.sleep(forTimeInterval: 0.03)
                 continue
             }
-            if queueManager.packetQueueIsFull() {
+            if delegate.packetQueueIsFull() {
                 Thread.sleep(forTimeInterval: 0.03)
                 continue
             }
             if isSeeking {
                 context.seeking(time: videoSeekingTime)
-                queueManager.allFlush()
-                queueManager.enqueueDiscardPacket()
+                delegate.flush()
+                delegate.enqueueDiscardPacket()
                 isSeeking = false
                 continue
             }
             let packet = Packet()
             let result = context.read(packet: packet)
             if result < 0 {
-                finished = true
                 break
             } else {
-                if let queue = queueManager.packetsQueue[packet.streamIndex] {
-                    let desc = queue.trackType == .video ? context.codecDescriptor : context.audioCodecDescriptor
-                    let timeBase = desc!.timebase
-                    packet.position = CMTimeMake(value: Int64(packet.pts) * Int64(timeBase.num), timescale: timeBase.den)
-                    queue.enqueue([packet])
-                }
+                delegate.enqueue(packet)
             }
         }
     }

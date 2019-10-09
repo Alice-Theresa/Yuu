@@ -10,31 +10,44 @@ import Foundation
 
 class DecodeLayer: Controlable {
     
+    weak var delegate: DecodeToQueueProtocol?
+    
     private var state = ControlState.origin
     
-    private let decodeOperation = BlockOperation()
+//    private let decodeOperation = BlockOperation()
     private let controlQueue = OperationQueue()
     
     private let queueManager: QueueManager
     private let context: FormatContext
     
     private var timeStamps: [Int: CMTime] = [:]
+    private var packetsQueue: [Int: ObjectQueue] = [:]
     
-    private var vtDecoder: VTDecoder
-//    private var ffDecoder: FFDecoder
+//    private var vtDecoder: VTDecoder
+    private var ffDecoder: FFDecoder
     private var videoDecoder: VideoDecoder
     private var audioDecoder: AudioDecoder
     
-    init(context: FormatContext, queueManager: QueueManager) {
+    deinit {
+        print("decode layer deinit")
+    }
+    
+    init(context: FormatContext, queueManager: QueueManager, demuxLayer: DemuxLayer) {
         self.queueManager = queueManager
         self.context = context
-        vtDecoder = VTDecoder(formatContext: context)
-//        ffDecoder = FFDecoder(formatContext: context)
-        videoDecoder = vtDecoder
+//        vtDecoder = VTDecoder(formatContext: context)
+        ffDecoder = FFDecoder(formatContext: context)
+        videoDecoder = ffDecoder
         audioDecoder = AudioDecoder(formatContext: context)
+        
+        for track in context.tracks {
+            packetsQueue[track.index] = ObjectQueue(queueType: .packet, trackType: track.type, needSort: false)
+        }
+        demuxLayer.delegate = self
     }
     
     func start() {
+        let decodeOperation = BlockOperation()
         decodeOperation.addExecutionBlock {
             self.decodingFrame()
         }
@@ -43,6 +56,7 @@ class DecodeLayer: Controlable {
     }
     
     func close() {
+        flush()
         state = .closed
         controlQueue.cancelAllOperations()
         controlQueue.waitUntilAllOperationsAreFinished()
@@ -58,33 +72,37 @@ class DecodeLayer: Controlable {
     
     func decodingFrame() {
         while state != .closed {
+//            guard let delegate = delegate else {
+//                Thread.sleep(forTimeInterval: 0.03)
+//                continue
+//            }
             if state == .paused {
                 Thread.sleep(forTimeInterval: 0.03)
                 continue
             }
-            var index = -1
+            var streamIndex = -1
             var min: CMTime = .zero
-            for (key, queue) in queueManager.packetsQueue {
+            for (key, queue) in packetsQueue {
                 if queue.count == 0 {
                     continue
                 }
-                if let timeStamp = timeStamps[index] {
+                if let timeStamp = timeStamps[streamIndex] {
                     if CMTimeCompare(timeStamp, min) < 0 {
                         min = timeStamp
-                        index = key
+                        streamIndex = key
                         continue
                     }
                 } else {
-                    index = key
+                    streamIndex = key
                     break
                 }
             }
-            if index == -1 {
+            if streamIndex == -1 {
                 continue
             }
-            let queue = queueManager.fetchFrameQueue(by: index)
+            let queue = queueManager.fetchFrameQueue(by: streamIndex)
             while true {
-                if queue.count > 20 && !decodeOperation.isCancelled {
+                if queue.count > 20 {
                     Thread.sleep(forTimeInterval: 0.03)
                     continue
                 } else {
@@ -93,20 +111,20 @@ class DecodeLayer: Controlable {
             }
             // dequeue packet
             guard
-                let packetqueue = queueManager.packetsQueue[index],
+                let packetqueue = packetsQueue[streamIndex],
                 let packet = packetqueue.dequeue() as? Packet else { continue }
             // update timestamps
-            timeStamps[index] = packet.position
+            timeStamps[streamIndex] = packet.position
             
             if packet.flags == .discard {
-                let c = queue.trackType == .video ? context.videoCodecContext : context.audioCodecContext
+                let c = packet.codecDescriptor!.trackType == .video ? context.videoCodecContext : context.audioCodecContext
                 avcodec_flush_buffers(c?.cContextPtr)
                 queue.flush()
                 queue.enqueue([MarkerFrame.init()])
                 packet.unref()
                 continue
             }
-            let decoder: Decodable? = queue.trackType == .video ? videoDecoder : audioDecoder
+            let decoder: Decodable? = packet.codecDescriptor!.trackType == .video ? videoDecoder : audioDecoder
             if let vd = decoder, packet.data != nil && packet.streamIndex >= 0 {
                 let frames = vd.decode(packet: packet)
                 queue.enqueue(frames)
@@ -115,3 +133,40 @@ class DecodeLayer: Controlable {
     }
     
 }
+
+extension DecodeLayer: DemuxToQueueProtocol {
+    func packetQueueIsFull() -> Bool {
+        var total = 0
+        for queue in packetsQueue {
+            total += queue.value.count
+        }
+        return total > 20
+    }
+    
+    func enqueue(_ packet: Packet) {
+        if let queue = packetsQueue[packet.streamIndex] {
+            let stream             = context.formatContext.streams[packet.streamIndex]
+            let codecDescriptor    = CodecDescriptor(timebase: stream.timebase, trackType: queue.trackType)
+            let timeBase           = stream.timebase
+            packet.position        = CMTimeMake(value: Int64(packet.pts) * Int64(timeBase.num), timescale: timeBase.den)
+            packet.codecDescriptor = codecDescriptor
+            queue.enqueue([packet])
+        }
+    }
+    
+    func flush() {
+        for (_, queue) in packetsQueue {
+            queue.flush()
+        }
+    }
+    
+    func enqueueDiscardPacket() {
+        for (_, queue) in packetsQueue {
+            let packet             = Packet()
+            packet.flags           = .discard
+            packet.codecDescriptor = CodecDescriptor(timebase: AVRational(), trackType: queue.trackType)
+            queue.enqueue([packet])
+        }
+    }
+}
+

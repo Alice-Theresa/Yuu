@@ -13,6 +13,19 @@ enum QueueType {
     case frame
 }
 
+protocol DemuxToQueueProtocol: class {
+    func packetQueueIsFull() -> Bool
+    func enqueueDiscardPacket()
+    func enqueue(_ packet: Packet)
+    func flush()
+}
+
+protocol DecodeToQueueProtocol: class {
+    func frameQueueIsFull(streamIndex: Int) -> Bool
+    func enqueue(_ frame: [FlowData])
+    func flush()
+}
+
 class QueueManager {
 
     let videoFrameQueue  = ObjectQueue(queueType: .frame, trackType: .video, needSort: true)
@@ -21,26 +34,9 @@ class QueueManager {
     private let videoTracksIndexes: [Int]
     private let audioTracksIndexes: [Int]
     
-    var packetsQueue: [Int: ObjectQueue]
-    
     init(context: FormatContext) {
-        videoTracksIndexes = context.videoTracks.map { $0.index }
-        audioTracksIndexes = context.audioTracks.map { $0.index }
-        packetsQueue = [:]
-        for track in context.videoTracks {
-            packetsQueue[track.index] = ObjectQueue(queueType: .packet, trackType: .video, needSort: false)
-        }
-        for track in context.audioTracks {
-            packetsQueue[track.index] = ObjectQueue(queueType: .packet, trackType: .audio, needSort: false)
-        }
-    }
-
-    func packetQueueIsFull() -> Bool {
-        var total = 0
-        for queue in packetsQueue {
-            total += queue.value.count
-        }
-        return total > 20
+        videoTracksIndexes = context.tracks.filter{ $0.type == .video }.map { $0.index }
+        audioTracksIndexes = context.tracks.filter{ $0.type == .audio }.map { $0.index }
     }
 
     func fetchFrameQueue(by index: Int) -> ObjectQueue {
@@ -53,20 +49,9 @@ class QueueManager {
         }
     }
     
-    func enqueueDiscardPacket() {
-        for (_, queue) in packetsQueue{
-            let packet1   = Packet()
-            packet1.flags = .discard
-            queue.enqueue([packet1])
-        }
-    }
-    
     func allFlush() {
         videoFrameQueue.flush()
         audioFrameQueue.flush()
-        for (_, queue) in packetsQueue {
-           queue.flush()
-       }
     }
 }
 

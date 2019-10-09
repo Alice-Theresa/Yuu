@@ -29,9 +29,20 @@ class RenderLayer: NSObject {
     private var audioFrame: AudioFrame?
     private var audioManager = AudioManager()
     
+    let videoFrameQueue  = ObjectQueue(queueType: .frame, trackType: .video, needSort: true)
+    let audioFrameQueue  = ObjectQueue(queueType: .frame, trackType: .audio, needSort: true)
+    private let videoTracksIndexes: [Int]
+    private let audioTracksIndexes: [Int]
+    
+    deinit {
+        print("render layer deinit")
+    }
+    
     init(context: FormatContext, queueManager: QueueManager, mtkView: MTKView) {
         self.queueManager = queueManager
         self.context = context
+        videoTracksIndexes = context.tracks.filter{ $0.type == .video }.map { $0.index }
+        audioTracksIndexes = context.tracks.filter{ $0.type == .audio }.map { $0.index }
         
         mtkView.device = render.device
         mtkView.depthStencilPixelFormat = .invalid
@@ -135,5 +146,18 @@ extension RenderLayer: AudioManagerDelegate {
             }
         }
     }
-    
 }
+
+//extension RenderLayer: DecodeToQueueProtocol {
+//    func frameQueueIsFull(streamIndex: Int) -> Bool {
+//        
+//    }
+//    
+//    func enqueue(_ frame: FlowData) {
+//        
+//    }
+//    
+//    func flush() {
+//        
+//    }
+//}

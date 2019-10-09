@@ -19,9 +19,10 @@ class FormatContext {
     var duration: TimeInterval = 0
     var totalDuration: CMTime = .zero
     
-    var videoTracks: [Track] = []
-    var audioTracks: [Track] = []
-    var subtitleTracks: [Track] = []
+//    var videoTracks: [Track] = []
+//    var audioTracks: [Track] = []
+//    var subtitleTracks: [Track] = []
+    var tracks: [Track] = []
     
     let formatContext: YuuFormatContext
     var videoCodecContext: YuuCodecContext?
@@ -47,20 +48,15 @@ class FormatContext {
             fatalError()
         }
         for (index, stream) in formatContext.streams.enumerated() {
-            switch stream.codecParameters.mediaType {
-            case AVMEDIA_TYPE_VIDEO:
-                videoTracks.append(Track(type: .video, index: index, metadata: stream.metadata))
-            case AVMEDIA_TYPE_AUDIO:
-                audioTracks.append(Track(type: .audio, index: index, metadata: stream.metadata))
-            case AVMEDIA_TYPE_SUBTITLE:
-                subtitleTracks.append(Track(type: .subtitle, index: index, metadata: stream.metadata))
-            default:
-                break
+            let type = TrackType(type: stream.codecParameters.mediaType)
+            for case type in [TrackType.video, TrackType.audio, TrackType.subtitle] {
+                 let track = Track(type: type, index: index, metadata: stream.metadata)
+                tracks.append(track)
             }
         }
-        videoIndex = videoTracks.first?.index ?? -1
-        audioIndex = audioTracks.first?.index ?? -1
-        subtitleIndex = subtitleTracks.first?.index ?? -1
+        videoIndex = tracks.filter { $0.type == .video }.first?.index ?? -1
+        audioIndex = tracks.filter { $0.type == .audio }.first?.index ?? -1
+        subtitleIndex = tracks.filter { $0.type == .subtitle }.first?.index ?? -1
         let videoStream = formatContext.streams[videoIndex]
         let audioStream = formatContext.streams[audioIndex]
         let videoCodec = YuuCodec.findDecoderById(AVCodecID(rawValue: videoStream.codecParameters.codecId.rawValue))
@@ -114,8 +110,8 @@ class FormatContext {
         if audioStream.timebase.den > 0 && audioStream.timebase.num > 0 {
             audioTimebase = av_q2d(audioStream.timebase)
         }
-        codecDescriptor = CodecDescriptor(timebase: stream.timebase)
-        audioCodecDescriptor = CodecDescriptor(timebase: audioStream.timebase)
+        codecDescriptor = CodecDescriptor(timebase: stream.timebase, trackType: .video)
+        audioCodecDescriptor = CodecDescriptor(timebase: audioStream.timebase, trackType: .audio)
     }
     
     private func settingDuration() {

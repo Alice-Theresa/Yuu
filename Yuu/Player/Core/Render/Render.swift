@@ -99,8 +99,11 @@ class Render {
         if (result != kCVReturnSuccess) {
             print(result)
         }
-        let textureV = CVMetalTextureGetTexture(yTexture!)
-        let textureUV = CVMetalTextureGetTexture(uvTexture!)
+        guard let yt = yTexture, let ut = uvTexture else {
+            return
+        }
+        let textureV = CVMetalTextureGetTexture(yt)
+        let textureUV = CVMetalTextureGetTexture(ut)
         guard let descriptor = view.currentRenderPassDescriptor,
             let currentDrawable = view.currentDrawable,
             let commandBuffer = commandQueue.makeCommandBuffer(),

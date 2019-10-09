@@ -11,8 +11,10 @@ import Foundation
 class CodecDescriptor {
     
     let timebase: AVRational
+    let trackType: TrackType
     
-    init(timebase: AVRational) {
+    init(timebase: AVRational,trackType: TrackType) {
         self.timebase = timebase
+        self.trackType = trackType
     }
 }
