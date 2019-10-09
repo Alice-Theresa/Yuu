@@ -14,9 +14,7 @@ class RenderLayer: NSObject {
     private var state = ControlState.origin
     private var isSeeking = false
 
-    private let queueManager: QueueManager
-    private let context: FormatContext
-    
+    private let context: FormatContext    
     private var mtkView: MTKView
     private let render = Render()
     weak var delegate: ControllerProtocol?
@@ -38,8 +36,7 @@ class RenderLayer: NSObject {
         print("render layer deinit")
     }
     
-    init(context: FormatContext, queueManager: QueueManager, mtkView: MTKView) {
-        self.queueManager = queueManager
+    init(context: FormatContext, decodeLayer: DecodeLayer, mtkView: MTKView) {
         self.context = context
         videoTracksIndexes = context.tracks.filter{ $0.type == .video }.map { $0.index }
         audioTracksIndexes = context.tracks.filter{ $0.type == .audio }.map { $0.index }
@@ -52,6 +49,7 @@ class RenderLayer: NSObject {
         super.init()
         mtkView.delegate = self
         audioManager.delegate = self
+        decodeLayer.delegate = self
     }
     
     func start() {
@@ -99,7 +97,7 @@ extension RenderLayer: MTKViewDelegate {
 //            delegate?.controlCenter(didRender: playFrame.position, duration: context.duration)
             videoFrame = nil
         } else {
-            videoFrame = queueManager.videoFrameQueue.dequeue()
+            videoFrame = videoFrameQueue.dequeue()
         }
     }
     
@@ -133,7 +131,7 @@ extension RenderLayer: AudioManagerDelegate {
                 } else {
                     self.audioFrame = nil
                 }
-            } else if let frame = queueManager.audioFrameQueue.dequeue() {
+            } else if let frame = audioFrameQueue.dequeue() {
                 if frame is MarkerFrame {
                     memset(od, 0, Int(nof * numberOfChannels) * MemoryLayout<Int16>.size);
                     audioSeekingTime = -Double.greatestFiniteMagnitude
@@ -148,16 +146,33 @@ extension RenderLayer: AudioManagerDelegate {
     }
 }
 
-//extension RenderLayer: DecodeToQueueProtocol {
-//    func frameQueueIsFull(streamIndex: Int) -> Bool {
-//        
-//    }
-//    
-//    func enqueue(_ frame: FlowData) {
-//        
-//    }
-//    
-//    func flush() {
-//        
-//    }
-//}
+extension RenderLayer: DecodeToQueueProtocol {
+    func enqueue(_ frame: [FlowData], streamIndex: Int) {
+        let queue: ObjectQueue
+        if videoTracksIndexes.contains(streamIndex) {
+            queue = videoFrameQueue
+        } else if audioTracksIndexes.contains(streamIndex) {
+            queue = audioFrameQueue
+        } else {
+            fatalError()
+        }
+        queue.enqueue(frame)
+    }
+    
+    func frameQueueIsFull(streamIndex: Int) -> Bool {
+        let queue: ObjectQueue
+        if videoTracksIndexes.contains(streamIndex) {
+            queue = videoFrameQueue
+        } else if audioTracksIndexes.contains(streamIndex) {
+            queue = audioFrameQueue
+        } else {
+            fatalError()
+        }
+        return queue.count > 20
+    }
+    
+    func flush() {
+        videoFrameQueue.flush()
+        audioFrameQueue.flush()
+    }
+}

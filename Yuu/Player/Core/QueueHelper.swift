@@ -22,37 +22,8 @@ protocol DemuxToQueueProtocol: class {
 
 protocol DecodeToQueueProtocol: class {
     func frameQueueIsFull(streamIndex: Int) -> Bool
-    func enqueue(_ frame: [FlowData])
+    func enqueue(_ frame: [FlowData], streamIndex: Int)
     func flush()
-}
-
-class QueueManager {
-
-    let videoFrameQueue  = ObjectQueue(queueType: .frame, trackType: .video, needSort: true)
-    let audioFrameQueue  = ObjectQueue(queueType: .frame, trackType: .audio, needSort: true)
-
-    private let videoTracksIndexes: [Int]
-    private let audioTracksIndexes: [Int]
-    
-    init(context: FormatContext) {
-        videoTracksIndexes = context.tracks.filter{ $0.type == .video }.map { $0.index }
-        audioTracksIndexes = context.tracks.filter{ $0.type == .audio }.map { $0.index }
-    }
-
-    func fetchFrameQueue(by index: Int) -> ObjectQueue {
-        if videoTracksIndexes.contains(index) {
-            return videoFrameQueue
-        } else if audioTracksIndexes.contains(index) {
-            return audioFrameQueue
-        } else {
-            fatalError()
-        }
-    }
-    
-    func allFlush() {
-        videoFrameQueue.flush()
-        audioFrameQueue.flush()
-    }
 }
 
 class ObjectQueue {

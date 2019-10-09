@@ -17,7 +17,7 @@ enum TrackType: Int {
     case attachment
     case nb
     
-    init(type: AVMediaType) {
+    init(_ type: AVMediaType) {
         switch type {
         case AVMEDIA_TYPE_UNKNOWN:
             self = .unknown
@@ -35,25 +35,6 @@ enum TrackType: Int {
             self = .nb
         default:
             self = .unknown
-        }
-    }
-    
-    var rawValue: Int {
-        switch self {
-        case .unknown:
-            return Int(AVMEDIA_TYPE_UNKNOWN.rawValue)
-        case .video:
-            return Int(AVMEDIA_TYPE_VIDEO.rawValue)
-        case .audio:
-            return Int(AVMEDIA_TYPE_AUDIO.rawValue)
-        case .data:
-            return Int(AVMEDIA_TYPE_DATA.rawValue)
-        case .subtitle:
-            return Int(AVMEDIA_TYPE_SUBTITLE.rawValue)
-        case .attachment:
-            return Int(AVMEDIA_TYPE_ATTACHMENT.rawValue)
-        case .nb:
-            return Int(AVMEDIA_TYPE_NB.rawValue)
         }
     }
 }

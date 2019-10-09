@@ -13,11 +13,7 @@ class DecodeLayer: Controlable {
     weak var delegate: DecodeToQueueProtocol?
     
     private var state = ControlState.origin
-    
-//    private let decodeOperation = BlockOperation()
     private let controlQueue = OperationQueue()
-    
-    private let queueManager: QueueManager
     private let context: FormatContext
     
     private var timeStamps: [Int: CMTime] = [:]
@@ -32,8 +28,7 @@ class DecodeLayer: Controlable {
         print("decode layer deinit")
     }
     
-    init(context: FormatContext, queueManager: QueueManager, demuxLayer: DemuxLayer) {
-        self.queueManager = queueManager
+    init(context: FormatContext, demuxLayer: DemuxLayer) {
         self.context = context
 //        vtDecoder = VTDecoder(formatContext: context)
         ffDecoder = FFDecoder(formatContext: context)
@@ -72,10 +67,10 @@ class DecodeLayer: Controlable {
     
     func decodingFrame() {
         while state != .closed {
-//            guard let delegate = delegate else {
-//                Thread.sleep(forTimeInterval: 0.03)
-//                continue
-//            }
+            guard let delegate = delegate else {
+                Thread.sleep(forTimeInterval: 0.03)
+                continue
+            }
             if state == .paused {
                 Thread.sleep(forTimeInterval: 0.03)
                 continue
@@ -100,9 +95,8 @@ class DecodeLayer: Controlable {
             if streamIndex == -1 {
                 continue
             }
-            let queue = queueManager.fetchFrameQueue(by: streamIndex)
             while true {
-                if queue.count > 20 {
+                if delegate.frameQueueIsFull(streamIndex: streamIndex) {
                     Thread.sleep(forTimeInterval: 0.03)
                     continue
                 } else {
@@ -119,15 +113,15 @@ class DecodeLayer: Controlable {
             if packet.flags == .discard {
                 let c = packet.codecDescriptor!.trackType == .video ? context.videoCodecContext : context.audioCodecContext
                 avcodec_flush_buffers(c?.cContextPtr)
-                queue.flush()
-                queue.enqueue([MarkerFrame.init()])
+                delegate.flush()
+                delegate.enqueue([MarkerFrame.init()], streamIndex: streamIndex)
                 packet.unref()
                 continue
             }
             let decoder: Decodable? = packet.codecDescriptor!.trackType == .video ? videoDecoder : audioDecoder
             if let vd = decoder, packet.data != nil && packet.streamIndex >= 0 {
                 let frames = vd.decode(packet: packet)
-                queue.enqueue(frames)
+                delegate.enqueue(frames, streamIndex: streamIndex)
             }
         }
     }

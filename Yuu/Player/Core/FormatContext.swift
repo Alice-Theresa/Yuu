@@ -18,10 +18,7 @@ class FormatContext {
     var audioTimebase: TimeInterval = 0
     var duration: TimeInterval = 0
     var totalDuration: CMTime = .zero
-    
-//    var videoTracks: [Track] = []
-//    var audioTracks: [Track] = []
-//    var subtitleTracks: [Track] = []
+
     var tracks: [Track] = []
     
     let formatContext: YuuFormatContext
@@ -48,7 +45,7 @@ class FormatContext {
             fatalError()
         }
         for (index, stream) in formatContext.streams.enumerated() {
-            let type = TrackType(type: stream.codecParameters.mediaType)
+            let type = TrackType(stream.codecParameters.mediaType)
             for case type in [TrackType.video, TrackType.audio, TrackType.subtitle] {
                  let track = Track(type: type, index: index, metadata: stream.metadata)
                 tracks.append(track)
