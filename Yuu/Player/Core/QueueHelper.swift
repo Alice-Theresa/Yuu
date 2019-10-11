@@ -32,8 +32,10 @@ class ObjectQueue {
     let trackType: TrackType
     let needSort: Bool
     
-    private let semaphore = DispatchSemaphore(value: 1)
     private(set) var count = 0
+    private(set) var size = 0
+    
+    private let semaphore = DispatchSemaphore(value: 1)
     private var queue: [FlowData] = []
     
     init(queueType: QueueType, trackType: TrackType, needSort: Bool) {
@@ -48,6 +50,7 @@ class ObjectQueue {
             semaphore.signal()
         }
         count += data.count
+        size += data.reduce(0) { $0 + $1.size }
         queue.append(contentsOf: data)
         if needSort {
             queue.sort { CMTimeCompare($0.position, $1.position) == -1 }
@@ -61,6 +64,7 @@ class ObjectQueue {
         }
         if let node = queue.first {
             count -= 1
+            size -= node.size
             queue.removeFirst()
             return node
         } else {
@@ -75,6 +79,7 @@ class ObjectQueue {
         }
         queue = []
         count = 0
+        size = 0
     }
     
 }

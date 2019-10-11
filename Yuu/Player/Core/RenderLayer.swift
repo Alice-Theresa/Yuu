@@ -68,6 +68,7 @@ class RenderLayer: NSObject {
     
     func close() {
         audioManager.stop()
+        flush()
     }
     
     func seeking(time: TimeInterval) {
@@ -75,7 +76,6 @@ class RenderLayer: NSObject {
         isSeeking = true
         audioSeekingTime = time
     }
-    
 }
 
 extension RenderLayer: MTKViewDelegate {
@@ -148,31 +148,27 @@ extension RenderLayer: AudioManagerDelegate {
 
 extension RenderLayer: DecodeToQueueProtocol {
     func enqueue(_ frame: [FlowData], streamIndex: Int) {
-        let queue: ObjectQueue
-        if videoTracksIndexes.contains(streamIndex) {
-            queue = videoFrameQueue
-        } else if audioTracksIndexes.contains(streamIndex) {
-            queue = audioFrameQueue
-        } else {
-            fatalError()
-        }
+        let queue = fetchFrameQueue(by: streamIndex)
         queue.enqueue(frame)
     }
     
     func frameQueueIsFull(streamIndex: Int) -> Bool {
-        let queue: ObjectQueue
-        if videoTracksIndexes.contains(streamIndex) {
-            queue = videoFrameQueue
-        } else if audioTracksIndexes.contains(streamIndex) {
-            queue = audioFrameQueue
-        } else {
-            fatalError()
-        }
+        let queue = fetchFrameQueue(by: streamIndex)
         return queue.count > 20
     }
     
     func flush() {
         videoFrameQueue.flush()
         audioFrameQueue.flush()
+    }
+    
+    func fetchFrameQueue(by streamIndex: Int) -> ObjectQueue {
+        if videoTracksIndexes.contains(streamIndex) {
+            return videoFrameQueue
+        } else if audioTracksIndexes.contains(streamIndex) {
+            return audioFrameQueue
+        } else {
+            fatalError()
+        }
     }
 }

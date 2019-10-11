@@ -31,8 +31,10 @@ class DemuxLayer: Controlable {
     
     func start() {
         let readPacketOperation = BlockOperation()
-        readPacketOperation.addExecutionBlock {
-            self.readPacket()
+        readPacketOperation.addExecutionBlock { [weak readPacketOperation] in
+            if let op = readPacketOperation, !op.isCancelled {
+                self.readPacket()
+            }
         }
         controlQueue.addOperation(readPacketOperation)
         state = .playing

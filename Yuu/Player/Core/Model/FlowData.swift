@@ -12,6 +12,7 @@ import MetalKit
 protocol FlowData {
     var duration: CMTime { get }
     var position: CMTime { get }
+    var size: Int { get }
 }
 
 class Packet: YuuPacket, FlowData {
@@ -25,11 +26,13 @@ class Packet: YuuPacket, FlowData {
 class MarkerFrame: FlowData {
     var duration: CMTime = .zero
     var position: CMTime = .zero
+    var size: Int        = 0
 }
 
 class AudioFrame: FlowData {
     var duration: CMTime = .zero
     var position: CMTime = .zero
+    var size: Int        = 0
     
     var samples: Data
     var outputOffset: Int = 0
@@ -50,6 +53,7 @@ class NV12VideoFrame: FlowData, RenderDataNV12 {
     
     var duration: CMTime
     var position: CMTime
+    var size: Int = 0
     
     init(duration: CMTime, position: CMTime, pixelBuffer: CVPixelBuffer) {
         self.duration = duration
@@ -70,6 +74,7 @@ class I420VideoFrame: FlowData, RenderDataI420 {
     
     var duration: CMTime
     var position: CMTime
+    var size: Int = 0
     
     deinit {
         luma_channel_pixels.deallocate()

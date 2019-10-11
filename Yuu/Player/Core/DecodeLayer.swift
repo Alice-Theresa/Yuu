@@ -43,8 +43,10 @@ class DecodeLayer: Controlable {
     
     func start() {
         let decodeOperation = BlockOperation()
-        decodeOperation.addExecutionBlock {
-            self.decodingFrame()
+        decodeOperation.addExecutionBlock { [weak decodeOperation] in
+            if let op = decodeOperation, !op.isCancelled {
+                self.decodingFrame()
+            }
         }
         controlQueue.addOperation(decodeOperation)
         state = .playing
@@ -76,12 +78,12 @@ class DecodeLayer: Controlable {
                 continue
             }
             var streamIndex = -1
-            var min: CMTime = .zero
+            var min: CMTime = .positiveInfinity
             for (key, queue) in packetsQueue {
                 if queue.count == 0 {
                     continue
                 }
-                if let timeStamp = timeStamps[streamIndex] {
+                if let timeStamp = timeStamps[key] {
                     if CMTimeCompare(timeStamp, min) < 0 {
                         min = timeStamp
                         streamIndex = key
@@ -131,10 +133,10 @@ class DecodeLayer: Controlable {
 extension DecodeLayer: DemuxToQueueProtocol {
     func packetQueueIsFull() -> Bool {
         var total = 0
-        for queue in packetsQueue {
-            total += queue.value.count
+        for (_, queue) in packetsQueue {
+            total += queue.size
         }
-        return total > 20
+        return total > 20 * 1024 * 1024
     }
     
     func enqueue(_ packet: Packet) {
