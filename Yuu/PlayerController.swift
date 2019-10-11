@@ -98,17 +98,26 @@ class PlayerController: UIViewController {
 }
 
 extension PlayerController: ControllerProtocol {
-    func controlCenter(didRender position: TimeInterval, duration: TimeInterval) {
-        let playing = Int(position)
-        let length = Int(duration)
-        let total = "\(length / 3600):\(length % 3600 / 60):\(length % 3600 % 60)"
+    func didRender(controller: Controller, position: CMTime, totalDuration: CMTime) {
+        let playing = CMTimeGetSeconds(position)
+        let length = CMTimeGetSeconds(totalDuration)
+        let total = String(format: "%d:%02d:%02d",
+                           Int(length / 3600),
+                           Int(length.truncatingRemainder(dividingBy: 3600) / 60),
+                           Int(length.truncatingRemainder(dividingBy: 60)))
         if !isTouchSlider {
-            let current = "\(playing / 3600):\(playing % 3600 / 60):\(playing % 3600 % 60)"
+            let current = String(format: "%d:%02d:%02d",
+                                 Int(playing / 3600),
+                                 Int(playing.truncatingRemainder(dividingBy: 3600) / 60),
+                                 Int(playing.truncatingRemainder(dividingBy: 60)))
             playerView.timeLabel.text = "\(current)/\(total)"
-            playerView.progressSlide.value = Float(position / duration)
+            playerView.progressSlide.value = Float(playing / length)
         } else {
-            let result = Int(playerView.progressSlide.value) * length
-            let current = "\(result / 3600):\(result % 3600 / 60):\(result % 3600 % 60)"
+            let result = Float64(playerView.progressSlide.value) * length
+            let current = String(format: "%d:%02d:%02d",
+                                 Int(result / 3600),
+                                 Int(result.truncatingRemainder(dividingBy: 3600) / 60),
+                                 Int(result.truncatingRemainder(dividingBy: 60)))
             playerView.timeLabel.text = "\(current)/\(total)"
         }
     }

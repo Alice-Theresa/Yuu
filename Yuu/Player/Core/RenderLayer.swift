@@ -9,18 +9,18 @@
 import Foundation
 import MetalKit
 
+protocol RenderLayerProtocol: class {
+    func renderLayer(_ renderLayer: RenderLayer, frame didRender: CMTime)
+}
+
 class RenderLayer: NSObject {
 
     private var state = ControlState.origin
-    private var isSeeking = false
 
     private let context: FormatContext    
     private var mtkView: MTKView
     private let render = Render()
-    weak var delegate: ControllerProtocol?
-    
-    private var videoSeekingTime: TimeInterval = -.greatestFiniteMagnitude
-    private var audioSeekingTime: TimeInterval = -.greatestFiniteMagnitude
+    weak var delegate: RenderLayerProtocol?
     
     private var syncer = Synchronizer()
     private var videoFrame: FlowData?
@@ -70,23 +70,12 @@ class RenderLayer: NSObject {
         audioManager.stop()
         flush()
     }
-    
-    func seeking(time: TimeInterval) {
-        videoSeekingTime = time
-        isSeeking = true
-        audioSeekingTime = time
-    }
 }
 
 extension RenderLayer: MTKViewDelegate {
     func draw(in view: MTKView) {
         if let playFrame = videoFrame {
             if playFrame is MarkerFrame {
-                videoSeekingTime = -.greatestFiniteMagnitude
-                videoFrame = nil
-                return
-            }
-            if videoSeekingTime > 0 {
                 videoFrame = nil
                 return
             }
@@ -94,7 +83,7 @@ extension RenderLayer: MTKViewDelegate {
                 return
             }
             render.render(frame: playFrame as! RenderData, drawIn: mtkView)
-//            delegate?.controlCenter(didRender: playFrame.position, duration: context.duration)
+            delegate?.renderLayer(self, frame: playFrame.position)
             videoFrame = nil
         } else {
             videoFrame = videoFrameQueue.dequeue()
@@ -110,11 +99,6 @@ extension RenderLayer: AudioManagerDelegate {
         var od = outputData
         while nof > 0 {
             if let frame = audioFrame {
-                if (self.audioSeekingTime > 0) {
-                    memset(od, 0, Int(nof * numberOfChannels) * MemoryLayout<Int16>.size);
-                    self.audioFrame = nil
-                    return
-                }
                 syncer.updateAudioClock(position: frame.position)
                 let nsData = frame.samples as NSData
                 let bytes: UnsafePointer<UInt8> = nsData.bytes.assumingMemoryBound(to: UInt8.self).advanced(by: frame.outputOffset)
@@ -134,7 +118,6 @@ extension RenderLayer: AudioManagerDelegate {
             } else if let frame = audioFrameQueue.dequeue() {
                 if frame is MarkerFrame {
                     memset(od, 0, Int(nof * numberOfChannels) * MemoryLayout<Int16>.size);
-                    audioSeekingTime = -Double.greatestFiniteMagnitude
                     self.audioFrame = nil
                 } else {
                     self.audioFrame = frame as? AudioFrame
@@ -154,7 +137,7 @@ extension RenderLayer: DecodeToQueueProtocol {
     
     func frameQueueIsFull(streamIndex: Int) -> Bool {
         let queue = fetchFrameQueue(by: streamIndex)
-        return queue.count > 20
+        return queue.count > 10
     }
     
     func flush() {

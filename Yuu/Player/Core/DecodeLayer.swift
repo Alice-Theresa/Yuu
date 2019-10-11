@@ -154,6 +154,7 @@ extension DecodeLayer: DemuxToQueueProtocol {
         for (_, queue) in packetsQueue {
             queue.flush()
         }
+        timeStamps = [:]
     }
     
     func enqueueDiscardPacket() {

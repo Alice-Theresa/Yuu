@@ -17,7 +17,7 @@ protocol Controlable {
 }
 
 protocol ControllerProtocol: class {
-    func controlCenter(didRender position: TimeInterval, duration: TimeInterval)
+    func didRender(controller: Controller, position: CMTime, totalDuration: CMTime)
 }
 
 enum ControlState {
@@ -56,6 +56,7 @@ class Controller {
         decodeLayer = DecodeLayer(context: context, demuxLayer: demuxLayer)
         renderLayer = RenderLayer(context: context, decodeLayer: decodeLayer, mtkView: mtkView)
         start()
+        renderLayer.delegate = self
     }
     
     func start() {
@@ -95,5 +96,10 @@ class Controller {
     @objc func appWillResignActive() {
         pause()
     }
-    
+}
+
+extension Controller: RenderLayerProtocol {
+    func renderLayer(_ renderLayer: RenderLayer, frame: CMTime) {
+        delegate?.didRender(controller: self, position: frame, totalDuration: context.totalDuration)
+    }
 }
